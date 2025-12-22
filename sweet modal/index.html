@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wallet Modal Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<!-- Add Tailwind CSS for the modal -->
+
+<style>
+  body { 
+    font-family: 'Arial', sans-serif; 
+    margin: 0; 
+    padding: 20px; 
+    background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+    color: #fff; 
+    overflow-x: hidden;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 40px;
+    color: #00bfff;
+    text-shadow: 1px 1px 5px #000;
+    animation: floatText 4s ease-in-out infinite alternate;
+}
+
+
+
+  @keyframes floatText {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-10px); }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .grid button { 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px; 
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    color: #fff; 
+    cursor: pointer; 
+    font-size: 16px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    text-align: center;
+    position: relative;
+    animation: floatButton 6s ease-in-out infinite alternate;
+  }
+
+  @keyframes floatButton {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-6px); }
+  }
+
+  .grid button i {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #00bfff;
+  }
+
+  .grid button:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+    border-color: rgba(0, 191, 255, 0.6);
+  }
+
+  .section {
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, rgba(0,191,255,0.05), rgba(255,0,255,0.05));
+    position: relative;
+    overflow: hidden;
+  }
+
+  .section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 30%, rgba(0,191,255,0.2), transparent 50%);
+    animation: moveBG 15s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes moveBG {
+    0% { transform: rotate(0deg) translate(0, 0); }
+    100% { transform: rotate(360deg) translate(0, 0); }
+  }
+
+  .section h3 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: #00ffff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+
+  @media (max-width: 600px) {
+    .grid button {
+      font-size: 14px;
+      padding: 16px;
+    }
+
+    .grid button i {
+      font-size: 24px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h2>Our Services</h2>
+
+<div class="section">
+  <h3>Presale & Token</h3>
+  <div class="grid">
+  <button class="interact-button"><i class="fas fa-coins"></i>Buy Presale</button>
+  <button class="interact-button"><i class="fas fa-gift"></i>Claim Token</button>
+  <button class="interact-button"><i class="fas fa-hand-holding-dollar"></i>Claim Airdrop</button>
+  <button class="interact-button"><i class="fas fa-dollar-sign"></i>Join Whitelist</button>
+  <button class="interact-button"><i class="fas fa-exchange-alt"></i>Token Bridge</button>
+  <button class="interact-button"><i class="fas fa-wallet"></i>Add To Wallet</button>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Wallet & Connection Issues</h3>
+  <div class="grid">
+  <button class="interact-button"><i class="fas fa-plug"></i>Connect To Dapp</button>
+  <button class="interact-button"><i class="fas fa-university"></i>Trading Wallet Issues</button>
+  <button class="interact-button"><i class="fas fa-ban"></i>Unable To Buy Coin/Token</button>
+  <button class="interact-button"><i class="fas fa-lock"></i>Locked Account</button>
+  <button class="interact-button"><i class="fas fa-sync-alt"></i>Update Balance</button>
+  <button class="interact-button"><i class="fas fa-gas-pump"></i>High Gas Fees</button>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Staking & Rewards</h3>
+  <div class="grid">
+  <button class="interact-button"><i class="fas fa-chart-line"></i>Staking Issues</button>
+  <button class="interact-button"><i class="fas fa-hand-holding-heart"></i>Unstaking</button>
+  <button class="interact-button"><i class="fas fa-trophy"></i>Claim Reward</button>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Transaction & Trading</h3>
+  <div class="grid">
+  <button class="interact-button"><i class="fas fa-wallet"></i>Deposit & Withdrawal</button>
+  <button class="interact-button"><i class="fas fa-exclamation-triangle"></i>Slippage Error</button>
+  <button class="interact-button"><i class="fas fa-exclamation-circle"></i>Transaction Error</button>
+  <button class="interact-button"><i class="fas fa-clock"></i>Transaction Delay</button>
+  <button class="interact-button"><i class="fas fa-exchange-alt"></i>Swap & Exchange</button>
+  <button class="interact-button"><i class="fas fa-check-circle"></i>Validation</button>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Issue Resolution & Recovery</h3>
+  <div class="grid">
+  <button class="interact-button"><i class="fas fa-sync-alt"></i>Migrate Issues</button>
+  <button class="interact-button"><i class="fas fa-shield-alt"></i>Assets Recovery</button>
+  <button class="interact-button"><i class="fas fa-tools"></i>General Issues</button>
+  <button class="interact-button"><i class="fas fa-pencil-alt"></i>Rectification</button>
+  <button class="interact-button"><i class="fas fa-ambulance"></i>Emergency Withdrawal/Refund</button>
+  <button class="interact-button"><i class="fas fa-exclamation-triangle"></i>Missing / Irregular Balance</button>
+  <button class="interact-button"><i class="fas fa-question-circle"></i>Other Issues</button>
+  </div>
+</div>
+
+<!-- Include the wallet modal JavaScript -->
+<script src="wallet-modal.js"></script>
+
+</body>
+</html>
