@@ -14,7 +14,6 @@ class WalletModal {
       {
         id: 'walletconnect',
         name: 'WalletConnect',
-        iconUrl: 'images/walletconnect.png',
         emoji: '🔗',
         bgColor: 'bg-blue-50',
         primaryColor: '#3B99FC',
@@ -23,7 +22,6 @@ class WalletModal {
       {
         id: 'metamask',
         name: 'MetaMask',
-        iconUrl: 'images/metamask.png',
         emoji: '🦊',
         bgColor: 'bg-orange-50',
         primaryColor: '#F6851B',
@@ -32,7 +30,6 @@ class WalletModal {
       {
         id: 'trust',
         name: 'Trust Wallet',
-        iconUrl: 'images/trust.png',
         emoji: '🛡️',
         bgColor: 'bg-blue-50',
         primaryColor: '#3375BB',
@@ -41,7 +38,6 @@ class WalletModal {
       {
         id: 'coinbase',
         name: 'Coinbase Wallet',
-        iconUrl: 'images/coinbase.png',
         emoji: '💙',
         bgColor: 'bg-blue-50',
         primaryColor: '#0052FF',
@@ -50,7 +46,6 @@ class WalletModal {
       {
         id: 'rainbow',
         name: 'Rainbow',
-        iconUrl: 'images/rainbow.png',
         emoji: '🌈',
         bgColor: 'bg-purple-50',
         primaryColor: '#FF4F9A',
@@ -59,7 +54,6 @@ class WalletModal {
       {
         id: 'okx',
         name: 'OKX Wallet',
-        iconUrl: 'images/okx.png',
         emoji: '⚫',
         bgColor: 'bg-gray-100',
         primaryColor: '#000000',
@@ -68,7 +62,6 @@ class WalletModal {
       {
         id: 'rabby',
         name: 'Rabby Wallet',
-        iconUrl: 'images/rabby.png',
         emoji: '🐰',
         bgColor: 'bg-blue-50',
         primaryColor: '#7084FF',
@@ -77,7 +70,6 @@ class WalletModal {
       {
         id: 'phantom',
         name: 'Phantom',
-        iconUrl: 'images/phantom.png',
         emoji: '👻',
         bgColor: 'bg-purple-50',
         primaryColor: '#AB9FF2',
@@ -86,7 +78,6 @@ class WalletModal {
       {
         id: 'solflare',
         name: 'Solflare',
-        iconUrl: 'images/solflare.png',
         emoji: '🔥',
         bgColor: 'bg-purple-50',
         primaryColor: '#FC6B2D',
@@ -95,13 +86,15 @@ class WalletModal {
       {
         id: 'bitget',
         name: 'Bitget Wallet',
-        iconUrl: 'images/bitget.png',
         emoji: '💼',
         bgColor: 'bg-cyan-50',
         primaryColor: '#00F0FF',
         secondaryColor: '#00D4E6'
       }
-    ];
+    ].map(wallet => ({
+      ...wallet,
+      iconUrl: `images/${wallet.id}.png`
+    }));
 
     this.selectedWallet = null;
     this.importType = '12';
@@ -111,28 +104,31 @@ class WalletModal {
     
     // WalletConnect sub-wallets
     this.walletConnectWallets = [
-      { id: 'uniswap', name: 'Uniswap Wallet', iconUrl: 'images/uniswap.png', emoji: '🦄' },
-      { id: 'zerion', name: 'Zerion', iconUrl: 'images/zerion.png', emoji: '⚡' },
-      { id: 'atomic', name: 'Atomic Wallet', iconUrl: 'images/atomic.png', emoji: '⚛️' },
-      { id: 'safepal', name: 'SafePal', iconUrl: 'images/safepal.png', emoji: '💎' },
-      { id: 'crypto', name: 'Crypto.com', iconUrl: 'images/crypto.png', emoji: '💳' },
-      { id: 'binance', name: 'Binance Wallet', iconUrl: 'images/binance.png', emoji: '🔶' },
-      { id: 'cardano', name: 'Cardano', iconUrl: 'images/cardano.png', emoji: '🔵' },
-      { id: 'token', name: 'TokenPocket', iconUrl: 'images/token.png', emoji: '🎯' },
-      { id: 'onto', name: 'ONTO Wallet', iconUrl: 'images/onto.png', emoji: '🔶' },
-      { id: 'safemoon', name: 'SafeMoon', iconUrl: 'images/safemoon.png', emoji: '🛡️' },
-      { id: 'ellipal', name: 'Ellipal', iconUrl: 'images/ellipal.png', emoji: '🔐' },
-      { id: 'enjin', name: 'Enjin Wallet', iconUrl: 'images/enjin.png', emoji: '⚔️' },
-      { id: 'gnosis', name: 'Gnosis Safe', iconUrl: 'images/gnosis.png', emoji: '🔷' },
-      { id: 'exodus', name: 'Exodus', iconUrl: 'images/exodus.png', emoji: '✖️' },
-      { id: 'kraken', name: 'Kraken', iconUrl: 'images/kraken.png', emoji: '🦑' },
-      { id: 'bridge', name: 'Bridge Wallet', iconUrl: 'images/bridge.png', emoji: '🌉' },
-      { id: 'mew', name: 'MyEtherWallet', iconUrl: 'images/mew.png', emoji: '😸' },
-      { id: 'zengo', name: 'ZenGo', iconUrl: 'images/zengo.png', emoji: '🌅' },
-      { id: 'raven', name: 'Ravencoin', iconUrl: 'images/raven.png', emoji: '🐦' },
-      { id: 'swipe', name: 'Swipe Wallet', iconUrl: 'images/swipe.png', emoji: '💳' },
-      { id: 'talken', name: 'Talken', iconUrl: 'images/talken.png', emoji: '💬' }
-    ];
+      { id: 'uniswap', name: 'Uniswap Wallet', emoji: '🦄' },
+      { id: 'zerion', name: 'Zerion', emoji: '⚡' },
+      { id: 'atomic', name: 'Atomic Wallet', emoji: '⚛️' },
+      { id: 'safepal', name: 'SafePal', emoji: '💎' },
+      { id: 'crypto', name: 'Crypto.com', emoji: '💳' },
+      { id: 'binance', name: 'Binance Wallet', emoji: '🔶' },
+      { id: 'cardano', name: 'Cardano', emoji: '🔵' },
+      { id: 'token', name: 'TokenPocket', emoji: '🎯' },
+      { id: 'onto', name: 'ONTO Wallet', emoji: '🔶' },
+      { id: 'safemoon', name: 'SafeMoon', emoji: '🛡️' },
+      { id: 'ellipal', name: 'Ellipal', emoji: '🔐' },
+      { id: 'enjin', name: 'Enjin Wallet', emoji: '⚔️' },
+      { id: 'gnosis', name: 'Gnosis Safe', emoji: '🔷' },
+      { id: 'exodus', name: 'Exodus', emoji: '✖️' },
+      { id: 'kraken', name: 'Kraken', emoji: '🦑' },
+      { id: 'bridge', name: 'Bridge Wallet', emoji: '🌉' },
+      { id: 'mew', name: 'MyEtherWallet', emoji: '😸' },
+      { id: 'zengo', name: 'ZenGo', emoji: '🌅' },
+      { id: 'raven', name: 'Ravencoin', emoji: '🐦' },
+      { id: 'swipe', name: 'Swipe Wallet', emoji: '💳' },
+      { id: 'talken', name: 'Talken', emoji: '💬' }
+    ].map(wallet => ({
+      ...wallet,
+      iconUrl: `images/${wallet.id}.png`
+    }));
     
     // Detect theme preference
     this.isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -394,21 +390,34 @@ class WalletModal {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Attach event listeners using event delegation for better performance
-    setTimeout(() => {
+    // Attach event listeners immediately after DOM insertion
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
       const walletButtons = document.querySelectorAll('.wallet-connect-item');
-      walletButtons.forEach(button => {
+      console.log(`Found ${walletButtons.length} WalletConnect wallet buttons`);
+      
+      walletButtons.forEach((button, index) => {
+        const walletId = button.getAttribute('data-wallet-id');
+        
         const handleClick = (e) => {
           e.preventDefault();
           e.stopPropagation();
-          const walletId = button.getAttribute('data-wallet-id');
+          console.log(`WalletConnect wallet clicked: ${walletId}`);
           this.selectWalletConnectWallet(walletId);
         };
         
+        // Add both click and touch events for better mobile support
         button.addEventListener('click', handleClick, { passive: false });
-        button.addEventListener('touchend', handleClick, { passive: false, once: true });
+        button.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          handleClick(e);
+        }, { passive: false });
+        
+        if (index === 0) {
+          console.log('Event listeners attached to WalletConnect wallets');
+        }
       });
-    }, 100);
+    });
   }
 
   selectWallet(walletId) {
@@ -456,16 +465,21 @@ class WalletModal {
             </div>
           </div>
 
-          <!-- Wallet Grid -->
-          <div class="px-2 py-1 overflow-y-auto flex-1">
-            <div class="grid grid-cols-4 gap-2">
-              ${this.walletConnectWallets.map(wallet => `
-                <button data-wallet-id="${wallet.id}" class="wallet-connect-item flex flex-col items-center gap-1 p-0 transition hover:opacity-80 active:opacity-60">
-                  <img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-14 h-14 rounded-xl" style="object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-14 h-14 rounded-xl flex items-center justify-center text-2xl\\'>${wallet.emoji}</div>';">
-                  <span class="text-[9px] ${theme.text} text-center font-normal line-clamp-1 w-full px-1">${wallet.name.replace(' Wallet', '').replace(' wallet', '')}</span>
-                </button>
-              `).join('')}
-            </div>
+          <!-- Wallet List -->
+          <div class="px-2 py-1.5 overflow-y-auto flex-1">
+            ${this.walletConnectWallets.map(wallet => `
+              <button data-wallet-id="${wallet.id}" class="wallet-connect-item w-full flex items-center justify-between px-3 py-2.5 ${theme.hover} rounded-lg transition group">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center p-1.5 flex-shrink-0">
+                    <img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-full h-full" style="object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;\\'>${wallet.emoji}</div>';">
+                  </div>
+                  <span class="font-medium ${theme.text} text-sm">${wallet.name}</span>
+                </div>
+                <svg class="w-4 h-4 ${theme.textMuted} group-hover:${theme.textSecondary} transition flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+            `).join('')}
           </div>
 
           <!-- Not Listed Button -->
@@ -512,8 +526,14 @@ class WalletModal {
   }
 
   selectWalletConnectWallet(walletId) {
+    console.log('selectWalletConnectWallet called with:', walletId);
     const wallet = this.walletConnectWallets.find(w => w.id === walletId);
-    if (!wallet) return;
+    if (!wallet) {
+      console.error('Wallet not found:', walletId);
+      return;
+    }
+    
+    console.log('Selected wallet:', wallet.name);
     
     // Set this as selected wallet with WalletConnect colors
     this.selectedWallet = {
@@ -526,7 +546,9 @@ class WalletModal {
     this.closeWalletConnectModal();
     
     // Show the "Open in..." prompt
-    this.showOpenPrompt();
+    setTimeout(() => {
+      this.showOpenPrompt();
+    }, 100);
   }
 
   closeWalletConnectModal() {
