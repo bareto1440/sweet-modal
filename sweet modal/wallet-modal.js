@@ -412,42 +412,22 @@ class WalletModal {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+  }
+
+  filterWallets(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    const walletItems = document.querySelectorAll('.wc-wallet-item');
     
-    // Add search functionality with better targeting
-    const attachSearch = () => {
-      const searchInput = document.getElementById('wc-search-input');
-      if (!searchInput) {
-        console.error('Search input not found');
-        return;
+    console.log(`Filtering wallets for: "${term}"`);
+    
+    walletItems.forEach(item => {
+      const walletName = item.getAttribute('data-wallet-name');
+      if (walletName && walletName.includes(term)) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
       }
-      
-      console.log('Search input attached');
-      
-      searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase().trim();
-        const walletItems = document.querySelectorAll('.wc-wallet-item');
-        
-        console.log(`Searching for: "${searchTerm}", found ${walletItems.length} items`);
-        
-        walletItems.forEach(item => {
-          const walletName = item.getAttribute('data-wallet-name');
-          if (walletName && walletName.includes(searchTerm)) {
-            item.style.display = 'flex';
-          } else {
-            item.style.display = 'none';
-          }
-        });
-      });
-      
-      // Also handle keyup for better responsiveness
-      searchInput.addEventListener('keyup', (e) => {
-        searchInput.dispatchEvent(new Event('input'));
-      });
-    };
-    
-    // Try immediately and with delay
-    attachSearch();
-    setTimeout(attachSearch, 50);
+    });
   }
 
   selectWallet(walletId) {
@@ -491,7 +471,7 @@ class WalletModal {
               <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme.textMuted}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
-              <input id="wc-search-input" type="text" placeholder="Search wallet" class="w-full pl-10 pr-4 py-2 ${theme.input} rounded-lg text-sm focus:outline-none" style="border: 1px solid ${this.isDarkMode ? '#374151' : '#E5E7EB'}">
+              <input id="wc-search-input" type="text" placeholder="Search wallet" onkeyup="walletModal.filterWallets(this.value)" class="w-full pl-10 pr-4 py-2 ${theme.input} rounded-lg text-sm focus:outline-none" style="border: 1px solid ${this.isDarkMode ? '#374151' : '#E5E7EB'}">
             </div>
           </div>
 
